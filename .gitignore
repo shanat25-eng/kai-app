@@ -1,28 +1,7 @@
-# Dependencies
-node_modules/
-
-# Build output
-dist/
-dist-ssr/
-
-# Environment variables — NEVER commit these
-.env.local
-.env.*.local
+﻿node_modules/
 .env
-
-# Editor
-.vscode/
-.idea/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-# OS
+dist/
 .DS_Store
-Thumbs.db
 
-# Logs
-*.log
-npm-debug.log*
+.env.local
+.env.*
