@@ -82,6 +82,7 @@ export default function CreateSessionSummaryScreen() {
   const [isRecording, setIsRecording] = useState(false)
   const [isTranscribing, setIsTranscribing] = useState(false)
   const [recordError, setRecordError] = useState(null)
+  const [wasRecorded, setWasRecorded] = useState(false)
   const mediaRecorderRef = useRef(null)
   const audioChunksRef = useRef([])
 
@@ -187,6 +188,7 @@ export default function CreateSessionSummaryScreen() {
           // ב-textarea הקיים לפני יצירת הטיוטה (בהתאם ל-PRD 7.3: "תמלול →
           // בדיקת הקלינאית"), ולא נדרש שום UI נוסף לצורך זה.
           setSourceText(transcript)
+          setWasRecorded(true)
 
           if (_mock) {
             // מסומן במפורש — לא שקט — כדי שלא יתבלבל עם תמלול אמיתי.
@@ -221,7 +223,6 @@ export default function CreateSessionSummaryScreen() {
   }
 
   function handleReset() {
-    // איפוס מלא — כמו טעינת המסך מחדש. כולל תאריך → היום, טקסט → ריק, טיוטה → null.
     setSourceText('')
     setSessionDate(todayIsoDate())
     setDraftSummary(null)
@@ -229,6 +230,7 @@ export default function CreateSessionSummaryScreen() {
     setFormErrors({})
     setSaveError(null)
     setRecordError(null)
+    setWasRecorded(false)
     setStep('input')
   }
 
@@ -236,34 +238,41 @@ export default function CreateSessionSummaryScreen() {
     if (!draftSummary || !selectedPatientId) return
     setIsSaving(true)
     setSaveError(null)
+
+    // מחשבים את גודל הנתונים לפני השמירה — לצורך הצגת שגיאה מפורטת אם תיכשל.
+    const generatedText = formatSummaryAsText(draftSummary)
+    // גרסת sourceText לאחסון: חותכים ל-2000 תווים כדי לא לפוצץ את ה-5MB של
+    // localStorage. הטקסט המלא נשמר בזיכרון ב-state בזמן המפגש — הוא לא
+    // נדרש לאחסון ארוך-טווח, רק ה-generatedText הוא הערך הנשמר.
+    const MAX_SOURCE_CHARS = 2000
+    const sourceTextForStorage =
+      sourceText.length > MAX_SOURCE_CHARS
+        ? sourceText.slice(0, MAX_SOURCE_CHARS) + '\n[... קוצר לאחסון]'
+        : sourceText
+    const draftSizeKB = Math.round(
+      (JSON.stringify({ patientId: selectedPatientId, sessionDate, sourceTextForStorage, generatedText }).length) / 1024
+    )
+
     try {
-      // שני יצירות רצופות: Session ואז Document שמצביע אליה.
-      // אם יצירת ה-Document תיכשל אחרי שה-Session כבר נוצרה — תישאר Session
-      // "יתומה" (בלי מסמך). זה תיעוד לא מלא אבל לא הרסני: המשתמשת יכולה
-      // לנסות שוב ולבנות מסמך חדש עם אותה Session, או פשוט להתעלם ממנה.
-      // ב-Backend אמיתי יהיה כאן transaction; כרגע ב-localStorage אין כזה.
       const session = await createSession(
         {
           patientId: selectedPatientId,
           sessionDate,
-          inputMethod: 'typed',
-          sourceText,
+          inputMethod: wasRecorded ? 'recording' : 'typed',
+          sourceText: sourceTextForStorage,
         },
         clinician.id,
       )
 
-      // שם "savedDocument" ולא "document" בכוונה — למניעת הצללה של
-      // האובייקט הגלובלי window.document (rename בלבד, בלי שינוי התנהגות).
+      // sourceText לא נשמר ב-Document — הוא כבר קיים ב-Session (דרך sessionId).
+      // שמירה כפולה של הטרנסקריפט המלא הייתה מכפילה את גודל האחסון לשווא.
       const savedDocument = await createDocument(
         {
           patientId: selectedPatientId,
           documentType: DOCUMENT_TYPE.SESSION_SUMMARY,
           sessionId: session.id,
-          sourceText,
-          generatedText: formatSummaryAsText(draftSummary),
-          // שלב 5: מעביר את תוצאת ה-Validation (שלב 4) הלאה ל-createDocument.
-          // הפרמטר validationResult כבר קיים ותומך בזה מאז שלב 2
-          // (api/documents.js) — לא נדרש שום שינוי שם, פשוט לא הוזן עד היום.
+          sourceText: null,
+          generatedText,
           validationResult: draftSummary.validation ?? null,
         },
         clinician.id,
@@ -273,7 +282,19 @@ export default function CreateSessionSummaryScreen() {
       setStep('saved')
     } catch (err) {
       console.error('kai: failed to save session summary draft', err)
-      setSaveError('שמירת הטיוטה נכשלה. הטיוטה נשמרה בזיכרון — נסי שוב.')
+      let storageUsedKB = '?'
+      try {
+        let total = 0
+        for (const k of Object.keys(localStorage)) total += (localStorage.getItem(k) ?? '').length
+        storageUsedKB = Math.round(total / 1024)
+      } catch {}
+      setSaveError(
+        `שמירת הטיוטה נכשלה.\n` +
+        `סוג שגיאה: ${err?.name ?? 'Unknown'}\n` +
+        `הודעה: ${err?.message ?? '(ריק)'}\n` +
+        `גודל טיוטה: ~${draftSizeKB} KB\n` +
+        `localStorage בשימוש: ~${storageUsedKB} KB / 5120 KB`
+      )
     } finally {
       setIsSaving(false)
     }
@@ -610,10 +631,13 @@ function DraftStep({
       {saveError && (
         <div
           role="alert"
-          className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          className="rounded-xl border-2 border-red-500 bg-red-50 px-4 py-4 text-red-800"
         >
-          <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-          <p>{saveError}</p>
+          <div className="mb-2 flex items-center gap-2 text-base font-bold">
+            <TriangleAlert className="h-5 w-5 shrink-0" aria-hidden="true" />
+            שגיאה בשמירה
+          </div>
+          <pre className="whitespace-pre-wrap break-all text-sm leading-relaxed">{saveError}</pre>
         </div>
       )}
 

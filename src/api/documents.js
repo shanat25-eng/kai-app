@@ -134,10 +134,6 @@ export async function createDocument(data, clinicianId) {
       source_sessions: data.sourceSessions ?? [],
       generated_text: data.generatedText,
       final_text: finalText,
-      sections,
-      versions: [],
-      version: 1,
-      locked: false,
       validation_result: data.validationResult ?? null,
     })
     .select()
@@ -192,9 +188,6 @@ export async function approveDocument(id, clinicianId) {
     .update({
       final_text: snapshot.finalText,
       status: DOCUMENT_STATUS.APPROVED,
-      locked: true,
-      approved_at: now,
-      versions: [...(current.versions ?? []).filter((v) => v.version !== current.version), snapshot],
     })
     .eq('id', id)
     .select()
@@ -222,7 +215,7 @@ export async function updateDocumentSection(id, sectionKey, text, clinicianId, o
 
   const { data: row, error } = await supabase
     .from('documents')
-    .update({ sections, final_text: finalText, status: nextStatus })
+    .update({ final_text: finalText, status: nextStatus })
     .eq('id', id)
     .select()
     .single()
@@ -240,10 +233,7 @@ export async function createNewVersion(id, clinicianId) {
   const { data: row, error } = await supabase
     .from('documents')
     .update({
-      version: current.version + 1,
       status: DOCUMENT_STATUS.REVIEWED,
-      locked: false,
-      approved_at: null,
     })
     .eq('id', id)
     .select()

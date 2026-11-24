@@ -23,6 +23,7 @@ function writeCollection(key, items) {
     localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(items))
   } catch (err) {
     console.error(`kai storage: failed to write "${key}"`, err)
+    throw err
   }
 }
 

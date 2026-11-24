@@ -324,14 +324,24 @@ export default function CreateSessionSummaryScreen() {
     if (!draftSummary || !selectedPatientId) return
     setIsSaving(true)
     setSaveError(null)
-    // אותו טקסט שממנו נוצרה הטיוטה (הקלט לא משתנה בזמן שהטיוטה מוצגת)
-    const savedSourceText = getEffectiveSourceText()
+
+    const fullSourceText = getEffectiveSourceText()
+    // חותכים את הטרנסקריפט ל-2000 תווים לפני שמירה ב-localStorage —
+    // טרנסקריפט של שעה יכול לשקול 100+ KB ולפוצץ את מכסת ה-5 MB.
+    const MAX_SOURCE_CHARS = 2000
+    const savedSourceText =
+      fullSourceText.length > MAX_SOURCE_CHARS
+        ? fullSourceText.slice(0, MAX_SOURCE_CHARS) + '\n[... קוצר לאחסון]'
+        : fullSourceText
+
+    const generatedText = formatSummaryAsText(draftSummary)
+
+    // מחשבים את גודל הנתונים לפני ניסיון השמירה (לצורך הצגת שגיאה מפורטת).
+    const draftSizeKB = Math.round(
+      JSON.stringify({ patientId: selectedPatientId, sessionDate, savedSourceText, generatedText }).length / 1024
+    )
+
     try {
-      // שני יצירות רצופות: Session ואז Document שמצביע אליה.
-      // אם יצירת ה-Document תיכשל אחרי שה-Session כבר נוצרה — תישאר Session
-      // "יתומה" (בלי מסמך). זה תיעוד לא מלא אבל לא הרסני: המשתמשת יכולה
-      // לנסות שוב ולבנות מסמך חדש עם אותה Session, או פשוט להתעלם ממנה.
-      // ב-Backend אמיתי יהיה כאן transaction; כרגע ב-localStorage אין כזה.
       const session = await createSession(
         {
           patientId: selectedPatientId,
@@ -342,20 +352,16 @@ export default function CreateSessionSummaryScreen() {
         clinician.id,
       )
 
-      // שם "savedDocument" ולא "document" בכוונה — למניעת הצללה של
-      // האובייקט הגלובלי window.document (rename בלבד, בלי שינוי התנהגות).
+      // sourceText לא נשמר ב-Document — הוא כבר קיים ב-Session (דרך sessionId).
+      // שמירה כפולה של הטרנסקריפט הייתה מכפילה את גודל האחסון לשווא.
       const savedDocument = await createDocument(
         {
           patientId: selectedPatientId,
           documentType: DOCUMENT_TYPE.SESSION_SUMMARY,
           sessionId: session.id,
-          sourceText: savedSourceText,
-          generatedText: formatSummaryAsText(draftSummary),
-          // שלב 6: סעיפים נפרדים לעריכה (aiText = הנוסח המקורי של ה-AI)
+          sourceText: null,
+          generatedText,
           sections: summaryToSections(draftSummary),
-          // שלב 5: מעביר את תוצאת ה-Validation (שלב 4) הלאה ל-createDocument.
-          // הפרמטר validationResult כבר קיים ותומך בזה מאז שלב 2
-          // (api/documents.js) — לא נדרש שום שינוי שם, פשוט לא הוזן עד היום.
           validationResult: draftSummary.validation ?? null,
         },
         clinician.id,
@@ -365,7 +371,19 @@ export default function CreateSessionSummaryScreen() {
       setStep('saved')
     } catch (err) {
       console.error('kai: failed to save session summary draft', err)
-      setSaveError('שמירת הטיוטה נכשלה. הטיוטה נשמרה בזיכרון — נסי שוב.')
+      let storageUsedKB = '?'
+      try {
+        let total = 0
+        for (const k of Object.keys(localStorage)) total += (localStorage.getItem(k) ?? '').length
+        storageUsedKB = Math.round(total / 1024)
+      } catch {}
+      setSaveError(
+        `שמירת הטיוטה נכשלה.\n` +
+        `סוג שגיאה: ${err?.name ?? 'Unknown'}\n` +
+        `הודעה: ${err?.message ?? '(ריק)'}\n` +
+        `גודל טיוטה: ~${draftSizeKB} KB\n` +
+        `localStorage בשימוש: ~${storageUsedKB} KB / 5120 KB`
+      )
     } finally {
       setIsSaving(false)
     }
@@ -916,10 +934,13 @@ function DraftStep({
       {saveError && (
         <div
           role="alert"
-          className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          className="rounded-xl border-2 border-red-500 bg-red-50 px-4 py-4 text-red-800"
         >
-          <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-          <p>{saveError}</p>
+          <div className="mb-2 flex items-center gap-2 font-bold">
+            <TriangleAlert className="h-5 w-5 shrink-0" aria-hidden="true" />
+            שגיאה בשמירה
+          </div>
+          <pre className="whitespace-pre-wrap break-all text-sm leading-relaxed">{saveError}</pre>
         </div>
       )}
 
