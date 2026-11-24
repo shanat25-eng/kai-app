@@ -1,0 +1,435 @@
+<title>מילון k.ai</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap">
+<style>
+:root {
+  --bg:       #F7F7F5;
+  --surface:  #FFFFFF;
+  --fg:       #111210;
+  --fg2:      #4A4D47;
+  --fg3:      #8A8E87;
+  --border:   #E2E4DF;
+  --accent:   #0A7260;
+  --accent-bg:#E6F3F0;
+  --shadow:   0 1px 3px rgba(0,0,0,.07), 0 4px 12px rgba(0,0,0,.05);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:       #111412;
+    --surface:  #1C1F1A;
+    --fg:       #EDEEE9;
+    --fg2:      #A8ADA3;
+    --fg3:      #62685E;
+    --border:   #2A2E28;
+    --accent:   #2DB898;
+    --accent-bg:#0D2922;
+    --shadow:   0 1px 3px rgba(0,0,0,.3), 0 4px 12px rgba(0,0,0,.25);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:       #111412;
+  --surface:  #1C1F1A;
+  --fg:       #EDEEE9;
+  --fg2:      #A8ADA3;
+  --fg3:      #62685E;
+  --border:   #2A2E28;
+  --accent:   #2DB898;
+  --accent-bg:#0D2922;
+  --shadow:   0 1px 3px rgba(0,0,0,.3), 0 4px 12px rgba(0,0,0,.25);
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: 'Heebo', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  direction: rtl;
+  padding-left:  max(16px, env(safe-area-inset-left,  0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-bottom: max(32px, env(safe-area-inset-bottom, 0px));
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto;
+  height: env(safe-area-inset-top, 0px);
+  background: var(--surface);
+  z-index: 20;
+}
+.site-header {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 10;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 0 0;
+}
+.header-top {
+  display: flex; align-items: baseline; gap: 10px;
+  margin-bottom: 10px; flex-wrap: wrap;
+}
+.site-logo { font-size: 1.1rem; font-weight: 800; color: var(--accent); }
+.site-title { font-size: 1rem; font-weight: 600; }
+.term-count { font-size: .78rem; color: var(--fg3); font-variant-numeric: tabular-nums; margin-right: auto; }
+.search-wrap { position: relative; margin-bottom: 10px; }
+.search-wrap svg {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  color: var(--fg3); pointer-events: none;
+}
+#search {
+  width: 100%; padding: 9px 38px 9px 14px;
+  border: 1px solid var(--border); border-radius: 8px;
+  background: var(--bg); color: var(--fg);
+  font-family: inherit; font-size: .9rem; outline: none;
+  transition: border-color .15s;
+}
+#search:focus { border-color: var(--accent); }
+#search::placeholder { color: var(--fg3); }
+.tabs {
+  display: flex; gap: 4px;
+  overflow-x: auto; scrollbar-width: none;
+  padding-bottom: 1px; -webkit-overflow-scrolling: touch;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  flex-shrink: 0; padding: 6px 12px;
+  border: none; border-radius: 7px 7px 0 0;
+  background: transparent; color: var(--fg2);
+  font-family: inherit; font-size: .78rem; font-weight: 500;
+  cursor: pointer; border-bottom: 2px solid transparent;
+  transition: color .15s, border-color .15s, background .15s;
+}
+.tab:hover { color: var(--fg); background: var(--accent-bg); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 700; }
+.tab .dot {
+  display: inline-block; width: 7px; height: 7px;
+  border-radius: 50%; margin-left: 5px; vertical-align: middle; margin-top: -1px;
+}
+main { padding-top: 20px; max-width: 1100px; margin: 0 auto; }
+#empty { text-align: center; padding: 60px 20px; color: var(--fg3); font-size: .9rem; }
+.domain-section { margin-bottom: 36px; }
+.domain-heading {
+  display: flex; align-items: center; gap: 10px;
+  margin: 0 0 14px; padding-bottom: 8px;
+  border-bottom: 2px solid var(--border);
+}
+.domain-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+.domain-heading h2 { margin: 0; font-size: .95rem; font-weight: 700; }
+.domain-heading span { font-size: .78rem; color: var(--fg3); margin-right: auto; font-variant-numeric: tabular-nums; }
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+}
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 16px;
+  box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 4px;
+  position: relative; overflow: hidden;
+  transition: box-shadow .15s;
+}
+.card::before {
+  content: ""; position: absolute;
+  right: 0; top: 0; bottom: 0; width: 3px;
+  border-radius: 0 10px 10px 0;
+  background: var(--dc, var(--accent));
+}
+.card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.12); }
+.card-he { font-size: 1.05rem; font-weight: 700; line-height: 1.3; }
+.card-en { font-size: .78rem; font-weight: 500; color: var(--fg3); direction: ltr; text-align: right; line-height: 1.3; }
+.card-pron { font-size: .74rem; color: var(--fg3); direction: ltr; text-align: right; line-height: 1.4; font-style: italic; opacity: .85; }
+.card-def { font-size: .84rem; color: var(--fg2); line-height: 1.55; margin-top: 4px; }
+.card-ctx {
+  display: inline-block; margin-top: 6px;
+  font-size: .74rem; color: var(--accent); background: var(--accent-bg);
+  border-radius: 5px; padding: 2px 7px; line-height: 1.5;
+}
+mark {
+  background: color-mix(in srgb, var(--accent) 25%, transparent);
+  color: inherit; border-radius: 2px; padding: 0 1px;
+}
+@media (max-width: 540px) { .cards { grid-template-columns: 1fr; } }
+</style>
+
+<header class="site-header">
+  <div class="header-top">
+    <span class="site-logo">k.ai</span>
+    <span class="site-title">מילון שפה, שמיעה ודיבור</span>
+    <span class="term-count" id="countLabel"></span>
+  </div>
+  <div class="search-wrap">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7">
+      <circle cx="6.5" cy="6.5" r="4.5"/><path d="M10.5 10.5 14 14"/>
+    </svg>
+    <input type="search" id="search" placeholder="חיפוש מונח, תיאור, הגייה, וריאנטים…" autocomplete="off">
+  </div>
+  <div class="tabs" id="tabs" role="tablist"></div>
+</header>
+
+<main id="main">
+  <div id="empty" hidden>לא נמצאו מונחים תואמים.</div>
+</main>
+
+<script>
+const DOMAIN_META = {
+  "שפה":           "#1A6FA3",
+  "דיבור":         "#1E8A52",
+  "שטף":           "#7040A8",
+  "קול":           "#B86B1A",
+  "בליעה":         "#B02828",
+  "תקשורת תומכת": "#0E8C9E",
+  "שמיעה":         "#9A7200",
+  "קריאה וכתיבה": "#A8286A",
+  "כללי / אבחון": "#4E5A66",
+};
+const DOMAIN_ORDER = Object.keys(DOMAIN_META);
+
+const TERMS = [
+  {"hebrew":"שפה קבלתית","english":"Receptive Language","pronunciation":"שָׁפָה קַבְּלָתִית","hebrew_transliteration_variants":[],"definition":"יכולת הבנת שפה: הקשבה, ביצוע הוראות, הבנת מילים ומשפטים","context":"נבדק בשירות התפתחות הילד ובתחנות לאם ולילד (טיפת חלב)","category":"שפה"},
+  {"hebrew":"שפה ביטויית","english":"Expressive Language","pronunciation":"שָׁפָה בִּיטּוּיִית","hebrew_transliteration_variants":[],"definition":"יכולת ייצור שפה: אוצר מילים, בניית משפטים מורכבים","context":null,"category":"שפה"},
+  {"hebrew":"עיכוב שפה","english":"Language Delay","pronunciation":"עִיכּוּב שָׁפָה","hebrew_transliteration_variants":[],"definition":"התפתחות שפתית איטית מהצפוי לגיל — הילד עוקב אחר המסלול התקין אך לאט יותר","context":"הפניה לקלינאית תקשורת דרך קופת חולים מגיל שנה וחצי","category":"שפה"},
+  {"hebrew":"הפרעת שפה","english":"Language Disorder","pronunciation":"הַפְרָעַת שָׁפָה","hebrew_transliteration_variants":[],"definition":"חריגה מהמסלול התקין של התפתחות שפה, לא רק קצב — גם תבניות חריגות","context":null,"category":"שפה"},
+  {"hebrew":"הפרעת שפה התפתחותית (DLD)","english":"Developmental Language Disorder","pronunciation":"הַפְרָעַת שָׁפָה הִתְפַּתְּחוּתִית — DLD (דִי-אֶל-דִי)","hebrew_transliteration_variants":["DLD","SLI","הפרעת שפה התפתחותית"],"definition":"הפרעת שפה עיקרית ללא סיבה רפואית ידועה — האבחנה המקובלת כיום במקום 'SLI'","context":"מאובחן לרוב בגן שפה או בוועדת השמה לחינוך מיוחד","category":"שפה"},
+  {"hebrew":"פרגמטיקה","english":"Pragmatics","pronunciation":"פְּרַגְמָטִיקָה / pragmatics","hebrew_transliteration_variants":["פראגמטיקה"],"definition":"שימוש חברתי בשפה: תורנות שיחה, יצירת שיח, הסקה חברתית, הבנת כוונה","context":null,"category":"שפה"},
+  {"hebrew":"תחביר","english":"Syntax","pronunciation":"תַּחְבִּיר","hebrew_transliteration_variants":[],"definition":"בניית משפטים, סדר מילים, שימוש נכון בצורות דקדוקיות","context":"בעברית: הטיות מין (זכר/נקבה), יחיד/רבים, בניינים","category":"שפה"},
+  {"hebrew":"מורפולוגיה","english":"Morphology","pronunciation":"מוֹרְפוֹלוֹגְיָה / morphology","hebrew_transliteration_variants":[],"definition":"שינויים בצורת המילה: גוף, מין, מספר, בניינים, יחסות","context":"ספציפי לעברית: כינוי קנייני ('ביתו'), שרשים ובניינים","category":"שפה"},
+  {"hebrew":"סמנטיקה","english":"Semantics","pronunciation":"סֶמַנְטִיקָה / semantics","hebrew_transliteration_variants":["סימנטיקה"],"definition":"משמעות מילים, ביטויים ומשפטים, כולל הפשטה ומטאפורה","context":null,"category":"שפה"},
+  {"hebrew":"שיח נרטיבי","english":"Narrative Discourse","pronunciation":"שִׂיחַ נַרָטִיבִי","hebrew_transliteration_variants":["נרטיב","שיח סיפורי"],"definition":"יכולת ספור סיפור, תיאור אירוע בסדר כרונולוגי עם מבנה ברור","context":"נבדק בבדיקות שפה סטנדרטיות בגיל 4–7 (כגון MBR, BESA עברי)","category":"שפה"},
+  {"hebrew":"עיבוד שמיעתי מרכזי (APD)","english":"Auditory Processing Disorder","pronunciation":"עִיבּוּד שְׁמִיעָתִי מֶרְכָּזִי — APD (אֵייפִּידִי)","hebrew_transliteration_variants":["עיבוד שמיעתי מרכזי","CAPD","APD"],"definition":"קושי בעיבוד מידע שמיעתי למרות שמיעה פריפרית תקינה","context":null,"category":"שפה"},
+  {"hebrew":"הבנת הוראות","english":"Following Directions","pronunciation":"הָבָנַת הוֹרָאוֹת","hebrew_transliteration_variants":[],"definition":"ביצוע הוראות מילוליות ברמות מורכבות גוברת (אחת, שתיים, מותנות)","context":null,"category":"שפה"},
+  {"hebrew":"ילדים דו-לשוניים","english":"Bilingual Children","pronunciation":"יְלָדִים דּוּ-לְשׁוֹנִיִּים","hebrew_transliteration_variants":[],"definition":"ילדים הגדלים עם שתי שפות — נורמלי ולא 'עיכוב שפה'","context":"בישראל: עברית+ערבית, עברית+רוסית, עברית+אמהרית. אבחון חייב להתבצע בשתי השפות","category":"שפה"},
+  {"hebrew":"שפה דומיננטית","english":"Dominant Language","pronunciation":"שָׁפָה דּוֹמִינַנְטִית","hebrew_transliteration_variants":["שפה חזקה","שפה ראשית"],"definition":"השפה החזקה יותר של ילד דו-לשוני — לא בהכרח שפת האם","context":"תלוי בחשיפה: ילד ערבי בגן עברי עשוי לפתח דומיננטיות עברית","category":"שפה"},
+  {"hebrew":"שפה סימולטנית","english":"Simultaneous Bilingualism","pronunciation":"שָׁפָה סִימוּלְטָנִית / simultaneous bilingualism","hebrew_transliteration_variants":["דו-לשוניות סימולטנית"],"definition":"רכישת שתי שפות מלידה (עד גיל 3)","context":null,"category":"שפה"},
+  {"hebrew":"שפה עוקבת","english":"Sequential Bilingualism","pronunciation":"שָׁפָה עוֹקֶבֶת","hebrew_transliteration_variants":[],"definition":"רכישת שפה שנייה לאחר ביסוס הראשונה","context":"ילדים עולים לישראל, ילדים ערבים המתחילים גן עברי","category":"שפה"},
+  {"hebrew":"העברה בין-לשונית","english":"Language Transfer","pronunciation":"הַעְבָּרָה בֵּין-לְשׁוֹנִית","hebrew_transliteration_variants":["העברה לשונית","טרנספר לשוני"],"definition":"השפעת שפה אחת על דפוסי השפה האחרת — לא תמיד שגיאה","context":"טעויות 'העברה' מרוסית/ערבית לעברית יש לזהות כך ולא כהפרעה","category":"שפה"},
+  {"hebrew":"מאפייני שפה עברית","english":"Hebrew Language Features","pronunciation":"מַאֲפַיְינֵי שָׁפָה עִבְרִית","hebrew_transliteration_variants":[],"definition":"עברית עם שורשים ובניינים, כתיב מלא וחסר, ניקוד — ייחודי לאבחון ולטיפול","context":"מבחנים סטנדרטיים ישראליים: רלדן, מבת״ל, Preschool Language Scale – עברית","category":"שפה"},
+  {"hebrew":"אוצר מילים קבלתי","english":"Receptive Vocabulary","pronunciation":"אוֹצַר מִילִּים קַבְּלָתִי","hebrew_transliteration_variants":[],"definition":"מילים שהילד מבין אך לא בהכרח משתמש בהן","context":null,"category":"שפה"},
+  {"hebrew":"אוצר מילים ביטויי","english":"Expressive Vocabulary","pronunciation":"אוֹצַר מִילִּים בִּיטּוּיִי","hebrew_transliteration_variants":[],"definition":"מילים שהילד מייצר ומשתמש בהן בדיבור","context":null,"category":"שפה"},
+
+  {"hebrew":"היגוי","english":"Articulation","pronunciation":"הִיגּוּי / articulation","hebrew_transliteration_variants":["ארטיקולציה"],"definition":"ייצור פיזי-מוטורי של צלילי דיבור בפה","context":null,"category":"דיבור"},
+  {"hebrew":"הפרעת היגוי","english":"Articulation Disorder","pronunciation":"הַפְרָעַת הִיגּוּי","hebrew_transliteration_variants":["הפרעה ארטיקולטורית"],"definition":"קושי בייצור צליל ספציפי בשל בעיה מוטורית, לא פונולוגית","context":null,"category":"דיבור"},
+  {"hebrew":"הפרעה פונולוגית","english":"Phonological Disorder","pronunciation":"הַפְרָעָה פוֹנוֹלוֹגִית","hebrew_transliteration_variants":[],"definition":"קשיי היגוי המשקפים בעיה בארגון מערכת הצלילים של השפה","context":null,"category":"דיבור"},
+  {"hebrew":"תהליכים פונולוגיים","english":"Phonological Processes","pronunciation":"תַּהֲלִיכִים פוֹנוֹלוֹגִיִּים","hebrew_transliteration_variants":[],"definition":"דפוסי שגיאה טיפוסיים בהתפתחות: השמטת עיצור סופי, טמון, החלפת שיני-שפתי וכד׳","context":null,"category":"דיבור"},
+  {"hebrew":"בהירות דיבור","english":"Speech Intelligibility","pronunciation":"בְּהִירוּת דִּיבּוּר","hebrew_transliteration_variants":["אינטליגיביליות"],"definition":"אחוז ההבנה של הדיבור על ידי מאזין מוכר ולא מוכר","context":null,"category":"דיבור"},
+  {"hebrew":"אפרקסיה של דיבור אצל ילדים (CAS)","english":"Childhood Apraxia of Speech","pronunciation":"אַפְרַקְסְיָה שֶׁל דִּיבּוּר — CAS (סִי-אֵייי-אֶס)","hebrew_transliteration_variants":["אפרקסיה של דיבור","CAS","Childhood Apraxia"],"definition":"הפרעה מוטורית בתכנון ותכנות דיבור — ללא חולשת שרירים","context":null,"category":"דיבור"},
+  {"hebrew":"דיזארתריה","english":"Dysarthria","pronunciation":"דִּיזַארְתְרְיָה / dysarthria (גם: דִּיסַארְתְרְיָה)","hebrew_transliteration_variants":["דיסארתריה","דיזרתריה"],"definition":"הפרעת דיבור נוירולוגית עקב חולשה, שיתוק או חוסר קואורדינציה של שרירי הדיבור","context":"אצל ילדים עם CP — גישה דרך שירותי התפתחות הילד","category":"דיבור"},
+  {"hebrew":"פרוזודיה","english":"Prosody","pronunciation":"פְּרוֹזוֹדְיָה / prosody","hebrew_transliteration_variants":["פרוסודיה"],"definition":"מנגינת הדיבור: הטעמה, קצב, מנגינה, הפסקות — גם ספציפי לאוטיזם","context":null,"category":"דיבור"},
+  {"hebrew":"הטעמה מלרעית/מלעילית","english":"Penultimate / Ultimate Stress","pronunciation":"הַטְעָמָה מִלְרָעִית / מִלְעֵילִית","hebrew_transliteration_variants":[],"definition":"מיקום ההטעמה בעברית — מלרעית (הברה אחרונה) היא הנורמה; מלעילית — ספציפית למילים מסוימות","context":"שגיאות הטעמה נפוצות בילדים עולים ממשפחות ערביות/רוסיות","category":"דיבור"},
+  {"hebrew":"ריש (ר׳)","english":"/r/ Phoneme","pronunciation":"רֵישׁ — הצליל /r/ בעברית ישראלית: ʁ גרוני","hebrew_transliteration_variants":[],"definition":"צליל הר׳ — בעברית ישראלית מקובלת: ר׳ גרונית (uvular ʁ), שונה מר׳ כתרגיל","context":"שגיאת ר׳ נפוצה מאוד בגיל הרך — נסגרת בדרך כלל עד גיל 5–6","category":"דיבור"},
+  {"hebrew":"צליל הצ׳ / ג׳ / ז׳","english":"Affricates / Fricatives","pronunciation":"צַ׳ / גַ׳ / זַ׳ — affricates ו-fricatives","hebrew_transliteration_variants":[],"definition":"צלילים הנוטים להיות מאוחרים בהתפתחות ונפוצים בהפרעות פונולוגיות","context":null,"category":"דיבור"},
+  {"hebrew":"מוטוריקת פה","english":"Oral Motor Skills","pronunciation":"מוֹטוֹרִיקַת פֶּה / oral motor","hebrew_transliteration_variants":["אוראל מוטור"],"definition":"כישורי שרירי הפה, הלשון, השפתיים — לדיבור ולבליעה","context":null,"category":"דיבור"},
+  {"hebrew":"מנגנון הדיבור","english":"Speech Mechanism","pronunciation":"מַנְגָּנוֹן הַדִּיבּוּר","hebrew_transliteration_variants":[],"definition":"מכלול האיברים המייצרים דיבור: ריאות, גרגרת, לוע, חך, שיניים, שפתיים, לשון","context":null,"category":"דיבור"},
+
+  {"hebrew":"גמגום","english":"Stuttering","pronunciation":"גַּמְגּוּם / stuttering","hebrew_transliteration_variants":["גמגמה","סטוטרינג"],"definition":"הפרעת שטף המתאפיינת בחזרות על הברות/מילים, הארכות וחסימות","context":"שכיחות: כ-1% מהאוכלוסייה. ילד גמגם לרוב מופנה דרך קופת חולים","category":"שטף"},
+  {"hebrew":"שטף","english":"Fluency","pronunciation":"שֶׁטֶף","hebrew_transliteration_variants":[],"definition":"זרימה חלקה של הדיבור ללא הפרעות","context":null,"category":"שטף"},
+  {"hebrew":"חזרות","english":"Repetitions","pronunciation":"חֲזָרוֹת","hebrew_transliteration_variants":[],"definition":"חזרה על הברות, מילים או ביטויים — סוג של דיספלואנסי - חוסר שטף","context":null,"category":"שטף"},
+  {"hebrew":"הארכות","english":"Prolongations","pronunciation":"הַאֲרָכוֹת","hebrew_transliteration_variants":[],"definition":"מתיחת צליל מעבר לצורה טבעית ('סססספר')","context":null,"category":"שטף"},
+  {"hebrew":"חסימות","english":"Blocks","pronunciation":"חֲסִימוֹת","hebrew_transliteration_variants":[],"definition":"עצירה מלאה בזרם האוויר/קול — הפה פתוח אך קול לא יוצא","context":null,"category":"שטף"},
+  {"hebrew":"התנהגויות נלוות","english":"Secondary Behaviors","pronunciation":"הִתְנַהֲגוּיוֹת נִלְווֹת","hebrew_transliteration_variants":["התנהגויות משניות"],"definition":"התנהגויות פיזיות שמתלוות לגמגום: מצמוץ, תנועות ראש, תנועות ידיים","context":null,"category":"שטף"},
+  {"hebrew":"הימנעות","english":"Avoidance","pronunciation":"הִימָּנְעוּת","hebrew_transliteration_variants":[],"definition":"הימנעות ממילים קשות, מצבים חברתיים, או דיבור בכלל בשל גמגום","context":null,"category":"שטף"},
+  {"hebrew":"חרדת דיבור","english":"Communication Anxiety","pronunciation":"חֲרָדַת דִּיבּוּר","hebrew_transliteration_variants":["חרדת תקשורת"],"definition":"פחד ממצבי דיבור המוביל לסטרס ולהחמרת הגמגום","context":null,"category":"שטף"},
+  {"hebrew":"עיצוב שטף","english":"Fluency Shaping","pronunciation":"עִיצּוּב שֶׁטֶף","hebrew_transliteration_variants":[],"definition":"טכניקה טיפולית: לימוד דפוס דיבור חדש ושוטף מהיסוד","context":null,"category":"שטף"},
+  {"hebrew":"שינוי גמגום","english":"Stuttering Modification","pronunciation":"שִׁינּוּי גַּמְגּוּם","hebrew_transliteration_variants":[],"definition":"טכניקה טיפולית: שינוי איכות הגמגום ולא ביטולו — פחות מאמץ","context":null,"category":"שטף"},
+  {"hebrew":"קלטרן","english":"Cluttering","pronunciation":"קְלַטְרֶן / cluttering","hebrew_transliteration_variants":["קלטרינג","דיבור מהיר ולא מאורגן"],"definition":"הפרעת שטף: קצב דיבור מהיר מדי, אי-סדר ופחות מודעות מאשר בגמגום","context":null,"category":"שטף"},
+  {"hebrew":"גמגום התפתחותי","english":"Developmental Stuttering","pronunciation":"גַּמְגּוּם הִתְפַּתְּחוּתִי","hebrew_transliteration_variants":[],"definition":"גמגום שמופיע בגיל 2–5, שכיח ולרוב חולף מאליו בתוך שנה","context":null,"category":"שטף"},
+
+  {"hebrew":"דיספוניה","english":"Dysphonia","pronunciation":"דִּיסְפּוֹנְיָה / dysphonia","hebrew_transliteration_variants":["הפרעת קול"],"definition":"כל שינוי באיכות הקול: צרידות, רוח, מתח — סימן לבעיה בגרגרת","context":null,"category":"קול"},
+  {"hebrew":"צרידות","english":"Hoarseness","pronunciation":"צְרִידוּת","hebrew_transliteration_variants":[],"definition":"שינוי בצליל הקול — גסות, חספוס — עקב שינוי במיתרי הקול","context":null,"category":"קול"},
+  {"hebrew":"קשריות קול","english":"Vocal Nodules","pronunciation":"קִשְׁרִיּוֹת קוֹל / vocal nodules","hebrew_transliteration_variants":["נודולות קוליות","נודולות של מיתרי קול"],"definition":"גושיות שפירות על מיתרי הקול, בדרך כלל עקב שימוש יתר","context":"נפוצות אצל ילדים קולניים ומורים. הטיפול הראשוני: היגיינת קול + טיפול קולי","category":"קול"},
+  {"hebrew":"פוליפ קולי","english":"Vocal Polyp","pronunciation":"פּוֹלִיפ קוֹלִי / vocal polyp","hebrew_transliteration_variants":["פוליפ של מיתר קול"],"definition":"גידול שפיר על מיתר קול אחד — בדרך כלל חד-צדדי","context":null,"category":"קול"},
+  {"hebrew":"שיתוק מיתר קול","english":"Vocal Cord Paralysis","pronunciation":"שִׁיתּוּק מֵיתַר קוֹל / vocal cord paralysis","hebrew_transliteration_variants":["שיתוק מיתרי קול"],"definition":"שיתוק של מיתר אחד או שניים — גורם לצרידות ולעתים לקשיי בליעה","context":null,"category":"קול"},
+  {"hebrew":"מתח יתר קולי","english":"Muscle Tension Dysphonia","pronunciation":"מֶתַח יֶתֶר קוֹלִי — MTD","hebrew_transliteration_variants":["דיספוניה ממתח שרירי","MTD"],"definition":"קושי בקול עקב מתח שרירי יתר בגרגרת — ללא נגע אורגני","context":null,"category":"קול"},
+  {"hebrew":"פוברפוניה / קול מוטציה","english":"Puberphonia / Mutational Dysphonia","pronunciation":"פּוּבֶרְפּוֹנְיָה / puberphonia (גם: קול מוטציה)","hebrew_transliteration_variants":["קול מוטציה","mutational falsetto","פובאפוניה"],"definition":"שמירה על קול גבוה (ילדותי) לאחר שינוי מוטציה — נפוץ בבנים","context":null,"category":"קול"},
+  {"hebrew":"גובה קול (פיץ׳)","english":"Pitch","pronunciation":"גֹּבַהּ קוֹל — פִּיץ׳ / pitch","hebrew_transliteration_variants":["פיץ'","תדר קול"],"definition":"תדר יסודי של הקול — גבוה, בינוני, נמוך","context":null,"category":"קול"},
+  {"hebrew":"עוצמת קול","english":"Loudness / Volume","pronunciation":"עֹצֶמֶת קוֹל","hebrew_transliteration_variants":[],"definition":"חוזק הקול — נמוך, גבוה, מונוטוני","context":null,"category":"קול"},
+  {"hebrew":"רזוננס","english":"Resonance","pronunciation":"רֶזוֹנַנְס / resonance","hebrew_transliteration_variants":["תהודה"],"definition":"הדהוד הקול בחלל הפה, האף, הגרון — משפיע על אופי הקול","context":null,"category":"קול"},
+  {"hebrew":"נזליות","english":"Nasality / Resonance Balance","pronunciation":"נַזְלִיּוּת / nasality","hebrew_transliteration_variants":["נזאליות","נזלתיות","resonance balance"],"definition":"איזון ההד האנפי בדיבור — רצף בין חסר נזליות לנזליות יתר; מוערך כחלק מהערכת רזוננס","context":"מוערך בילדים עם חך שסוע, אחרי ניתוח חך, ב-VPI (velopharyngeal insufficiency)","category":"קול"},
+  {"hebrew":"נזליות יתר","english":"Hypernasality","pronunciation":"נַזְלִיּוּת יֶתֶר — היפרנזאליות","hebrew_transliteration_variants":["היפרנזאליות","hypernasality","אנפניות יתר"],"definition":"עודף הד אנפי — קול 'אנפני'","context":"נפוץ בחך שסוע ובאחרי ניתוחי חך","category":"קול"},
+  {"hebrew":"חסר נזליות","english":"Hyponasality","pronunciation":"חֹסֶר נַזְלִיּוּת — היפונזאליות","hebrew_transliteration_variants":["היפונזאליות","hyponasality","נזליות חסרה"],"definition":"קול חסר הד אנפי — נשמע כאילו האף סתום; גורם: פוליפים, אדנואידים, נזלת","context":"שכיח לאחר ניתוחי אדנואידים; ניתן להגיע לנזיפות חסרה (hyponasality) ולאחר מכן לנזיפות יתר (hypernasality)","category":"קול"},
+  {"hebrew":"היגיינת קול","english":"Vocal Hygiene","pronunciation":"הִיגְּיֵינַת קוֹל","hebrew_transliteration_variants":[],"definition":"הרגלים לשמירת בריאות הקול: שתיית מים, הימנעות מצעקות, הפסקות","context":"מוסבר לילדים, מורים, זמרים","category":"קול"},
+
+  {"hebrew":"דיספגיה","english":"Dysphagia","pronunciation":"דִּיסְפַּגְיָה / dysphagia","hebrew_transliteration_variants":["דיספאגיה","קשיי בליעה"],"definition":"קושי בבליעה — יכול לפגוע בתזונה, בבריאות ריאות וב-QoL","context":null,"category":"בליעה"},
+  {"hebrew":"שאיבה","english":"Aspiration","pronunciation":"שְׁאִיבָה / aspiration (גם: אַסְפִּירַציָה)","hebrew_transliteration_variants":["אספירציה","אַסְפִּירַציָה"],"definition":"כניסת מזון, נוזל או רוק לדרכי הנשימה מתחת לגרגרת","context":null,"category":"בליעה"},
+  {"hebrew":"שאיבה שקטה","english":"Silent Aspiration","pronunciation":"שְׁאִיבָה שְׁקֵטָה / silent aspiration","hebrew_transliteration_variants":["silent aspiration","אספירציה שקטה"],"definition":"שאיבה ללא שיעול/תגובה — מסוכנת במיוחד ודורשת בדיקת VFSS/FEES","context":null,"category":"בליעה"},
+  {"hebrew":"חדירה","english":"Penetration","pronunciation":"חֲדִירָה / penetration","hebrew_transliteration_variants":["פנטרציה"],"definition":"כניסת מזון/נוזל לכניסת הגרגרת אך לא לריאות — מדרג חומרה < שאיבה","context":null,"category":"בליעה"},
+  {"hebrew":"שלב הפה","english":"Oral Phase","pronunciation":"שְׁלַב הַפֶּה","hebrew_transliteration_variants":[],"definition":"לעיסה, הכנת בולוס ודחיפתו לאחור — נשלט רצונית","context":null,"category":"בליעה"},
+  {"hebrew":"שלב הלוע","english":"Pharyngeal Phase","pronunciation":"שְׁלַב הַלּוּעַ","hebrew_transliteration_variants":[],"definition":"הבליעה הרפלקסיבית, סגירת גרגרת ומניעת שאיבה — מהיר ואוטומטי","context":null,"category":"בליעה"},
+  {"hebrew":"שלב הוושט","english":"Esophageal Phase","pronunciation":"שְׁלַב הַוּוֶשֶׁט","hebrew_transliteration_variants":[],"definition":"מעבר מזון מהלוע לקיבה דרך הוושט","context":null,"category":"בליעה"},
+  {"hebrew":"הפרעת הזנה","english":"Pediatric Feeding Disorder","pronunciation":"הַפְרָעַת הַזָּנָה","hebrew_transliteration_variants":["הפרעת האכלה","feeding disorder"],"definition":"קושי בהזנה אצל תינוקות/ילדים — יכול לכלול סלקטיביות, סירוב, חרדה","context":"שכיח ב-ASD, CP, פגות — מופנה לצוות רב-מקצועי","category":"בליעה"},
+  {"hebrew":"סלקטיביות מזון","english":"Food Selectivity","pronunciation":"סֶלֶקְטִיבִיּוּת מָזוֹן","hebrew_transliteration_variants":["בררנות מזון","food selectivity"],"definition":"הגבלה קיצונית של מגוון/מרקמי מזון — נפוצה באוטיזם","context":null,"category":"בליעה"},
+  {"hebrew":"VFSS — שיקוף בליעה","english":"Videofluoroscopic Swallowing Study","pronunciation":"VFSS — וִי-אֶף-אֶס-אֶס, שִׁיקּוּף בְּלִיעָה","hebrew_transliteration_variants":["שיקוף בליעה","וידאופלואורוסקופיה","MBSS"],"definition":"בדיקת בליעה עם ניגוד תחת שיקוף — 'gold standard' לאבחון שאיבה","context":"נעשית בבית חולים; מחלקות ריאות/ENT/קלינאיות תקשורת","category":"בליעה"},
+  {"hebrew":"FEES — אנדוסקופיה","english":"Fiberoptic Endoscopic Evaluation of Swallowing","pronunciation":"FEES — פִי-אִי-אִי-אֶס, אֶנְדּוֹסְקוֹפְּיַת בְּלִיעָה","hebrew_transliteration_variants":["אנדוסקופיה בליעה","FEES"],"definition":"בדיקה אנדוסקופית גמישה של בליעה דרך האף","context":null,"category":"בליעה"},
+  {"hebrew":"IDDSI","english":"International Dysphagia Diet Standardisation Initiative","pronunciation":"IDDSI — אִי-דִי-דִי-אֶס-אִי","hebrew_transliteration_variants":["תקן סמיכות מזון"],"definition":"תקן בינלאומי ל-8 רמות סמיכות מזון ונוזל — אחיד בין מוסדות","context":"מאומץ בבתי חולים ובמוסדות סיעודיים בישראל","category":"בליעה"},
+  {"hebrew":"הזנה בזונדה / PEG","english":"Tube Feeding (NGT / PEG)","pronunciation":"הַזָּנָה בְּזוֹנְדָּה / PEG (פֶּג)","hebrew_transliteration_variants":["NGT","PEG","הזנה מלאכותית"],"definition":"הזנה מלאכותית דרך זונדה נסוגסטרית או PEG ישיר לקיבה","context":null,"category":"בליעה"},
+  {"hebrew":"רפלוקס ושט-קיבה","english":"Gastroesophageal Reflux (GERD)","pronunciation":"רֶפְלוּקְס וֶשֶׁט-קֵיבָה — GERD (גֶ׳רד)","hebrew_transliteration_variants":["GERD","GORD","ריפלוקס"],"definition":"עלייה של חומצה מהקיבה — שכיח בתינוקות ומשפיע על הזנה ועל קול","context":null,"category":"בליעה"},
+  {"hebrew":"דלקת ריאות שאיפה","english":"Aspiration Pneumonia","pronunciation":"דַּלֶּקֶת רֵיאוֹת שְׁאִיפָה","hebrew_transliteration_variants":["פנאומוניה שאיפה","aspiration pneumonia"],"definition":"דלקת ריאות כתוצאה מחדירת חומר לדרכי הנשימה","context":null,"category":"בליעה"},
+
+  {"hebrew":"תקשורת תומכת ומוגברת (AAC)","english":"Augmentative & Alternative Communication","pronunciation":"תִּקְשׁוֹרֶת תּוֹמֶכֶת וּמוּגְבֶּרֶת — AAC (אֵי-אֵי-סִי)","hebrew_transliteration_variants":["תקשורת תומכת","תקשורת חלופית","AAC"],"definition":"כל שיטה ומכשיר שתומכים בתקשורת בנוסף לדיבור או במקומו","context":"זכאות ל-SGD בסל הבריאות בתנאים מסוימים, בתיאום עם ביטוח לאומי","category":"תקשורת תומכת"},
+  {"hebrew":"AAC ללא עזרים","english":"Unaided AAC","pronunciation":"AAC לְלֹא עֲזָרִים","hebrew_transliteration_variants":[],"definition":"ידיים, מחוות, הבעות פנים, שפת גוף — לא דורש ציוד","context":null,"category":"תקשורת תומכת"},
+  {"hebrew":"AAC עם עזרים","english":"Aided AAC","pronunciation":"AAC עִם עֲזָרִים","hebrew_transliteration_variants":[],"definition":"לוחות תקשורת, ספרים, מכשירים דיגיטליים — דורש ציוד חיצוני","context":null,"category":"תקשורת תומכת"},
+  {"hebrew":"מכשיר יוצר דיבור (SGD)","english":"Speech Generating Device","pronunciation":"מַכְשִׁיר יוֹצֵר דִּיבּוּר — SGD (אֶס-גִּי-דִי)","hebrew_transliteration_variants":["מכשיר יוצר דיבור","talker","Voice Output Device","SGD"],"definition":"מכשיר דיגיטלי שמוציא קול מסונתז עם לחיצה על סמלים","context":"מאושר בישראל בתנאים מסוימים; מלווה ביחד עם ביטוח לאומי","category":"תקשורת תומכת"},
+  {"hebrew":"PECS","english":"Picture Exchange Communication System","pronunciation":"PECS — פֵּקְס (Picture Exchange Communication System)","hebrew_transliteration_variants":["פקס","מערכת החלפת תמונות"],"definition":"שיטת תקשורת בהחלפת תמונות — מלמד יזימת תקשורת שלב אחר שלב","context":"נפוץ מאוד בישראל בתוכניות אוטיזם","category":"תקשורת תומכת"},
+  {"hebrew":"מאקטון (Makaton)","english":"Makaton","pronunciation":"מַאקְטוֹן / Makaton","hebrew_transliteration_variants":["מאקאטון","מקטון"],"definition":"מערכת של סמלים גרפיים ואיתותי ידיים לתמיכה בתקשורת","context":null,"category":"תקשורת תומכת"},
+  {"hebrew":"לוח תקשורת","english":"Communication Board / PODD","pronunciation":"לוּחַ תִּקְשׁוֹרֶת / communication board","hebrew_transliteration_variants":["PODD","לוח PODD"],"definition":"לוח עם סמלים, תמונות או מילים לתקשורת ישירה","context":null,"category":"תקשורת תומכת"},
+  {"hebrew":"סמלים גרפיים","english":"Graphic Symbols (PCS / Arasaac / Widgit)","pronunciation":"סְמָלִים גְּרַפִּיִּים","hebrew_transliteration_variants":["PCS","Arasaac","Widgit"],"definition":"מערכות סמלים ציוריים לאנשים שאינם קוראים עדיין","context":null,"category":"תקשורת תומכת"},
+  {"hebrew":"מודלינג של AAC","english":"Aided Language Modeling / AAC Modeling","pronunciation":"מוֹדֶלִינְג שֶׁל AAC","hebrew_transliteration_variants":["Aided Language Modeling","ALgS","ALM"],"definition":"המטפל עצמו משתמש ב-AAC כמודל — 'אני מראה לך איך משתמשים בזה'","context":null,"category":"תקשורת תומכת"},
+  {"hebrew":"אוצר מילים ליבה","english":"Core Vocabulary","pronunciation":"אוֹצַר מִילִּים לֵיבָה / core vocabulary","hebrew_transliteration_variants":["core vocabulary"],"definition":"300–500 מילים שמכסות כ-80% מהתקשורת היומיומית (אני, רוצה, לא, עוד…)","context":null,"category":"תקשורת תומכת"},
+  {"hebrew":"אוצר מילים נושאי","english":"Fringe / Topic Vocabulary","pronunciation":"אוֹצַר מִילִּים נוֹשְׂאִי / fringe vocabulary","hebrew_transliteration_variants":["fringe vocabulary"],"definition":"מילים ספציפיות לנושאים ולאירועים — משלימות את הליבה","context":null,"category":"תקשורת תומכת"},
+  {"hebrew":"כרטיס תקשורת","english":"Communication Passport","pronunciation":"כַּרְטִיס תִּקְשׁוֹרֶת / communication passport","hebrew_transliteration_variants":["communication passport"],"definition":"מסמך קצר המתאר את צרכי המשתמש, שיטות תקשורתו ומה עוזר לו","context":"שימושי במעברים בין מסגרות — גן, בית ספר, אשפוז","category":"תקשורת תומכת"},
+  {"hebrew":"תקשורת כוללת","english":"Total Communication","pronunciation":"תִּקְשׁוֹרֶת כּוֹלֶלֶת","hebrew_transliteration_variants":[],"definition":"גישה המשלבת דיבור, AAC, שפת סימנים ומחוות יחד","context":null,"category":"תקשורת תומכת"},
+  {"hebrew":"שפת הסימנים הישראלית","english":"Israeli Sign Language (ISL)","pronunciation":"שְׂפַת הַסִּימָנִים הַיִּשְׂרְאֵלִית — ISL (אִי-אֶס-אֶל)","hebrew_transliteration_variants":["ISL","שפת סימנים","שפת הסימנים"],"definition":"שפת סימנים ייחודית לקהילת החרשים בישראל — שונה מ-ASL לחלוטין","context":"מוכרת כשפה מלאה; נלמדת בחלק מכיתות השמיעה","category":"תקשורת תומכת"},
+
+  {"hebrew":"ירידת שמיעה","english":"Hearing Loss","pronunciation":"יְרִידַת שְׁמִיעָה","hebrew_transliteration_variants":["לקות שמיעה","חירשות","hearing loss"],"definition":"כל ירידה ביכולת שמיעה — קלה, בינונית, חמורה, עמוקה","context":"סריקת שמיעה ביילוד חובה בישראל מאז 2000","category":"שמיעה"},
+  {"hebrew":"ירידת שמיעה תחושתית-עצבית","english":"Sensorineural Hearing Loss","pronunciation":"יְרִידַת שְׁמִיעָה תַּחוּשָׁתִית-עֲצָבִית — SNHL","hebrew_transliteration_variants":["SNHL","ירידה תחושתית-עצבית","sensorineural"],"definition":"בעיה בשבלול (cochlea) ו/או בעצב השמיעה — לרוב קבועה","context":null,"category":"שמיעה"},
+  {"hebrew":"ירידת שמיעה הולכתית","english":"Conductive Hearing Loss","pronunciation":"יְרִידַת שְׁמִיעָה הוֹלָכְתִּית","hebrew_transliteration_variants":["ירידה הולכתית","conductive hearing loss"],"definition":"בעיה בהולכת צליל באוזן חיצונית/תיכונה — לרוב הפיכה","context":"נוזל באוזן (OME) — סיבה שכיחה בגיל הרך בישראל","category":"שמיעה"},
+  {"hebrew":"ירידת שמיעה מעורבת","english":"Mixed Hearing Loss","pronunciation":"יְרִידַת שְׁמִיעָה מְעוּרֶבֶת","hebrew_transliteration_variants":[],"definition":"שילוב של הולכתית ותחושתית-עצבית באותה אוזן","context":null,"category":"שמיעה"},
+  {"hebrew":"אודיוגרמה","english":"Audiogram","pronunciation":"אוֹדִיאוֹגְרָמָה / audiogram","hebrew_transliteration_variants":["אודיוגרם","בדיקת שמיעה"],"definition":"גרף של ספי שמיעה לפי תדרים (250–8000 Hz) ולפי עוצמה (dBHL)","context":null,"category":"שמיעה"},
+  {"hebrew":"OAE — פליטות אוטואקוסטיות","english":"Otoacoustic Emissions","pronunciation":"OAE — אוֹ-אֵי-אִי (Otoacoustic Emissions)","hebrew_transliteration_variants":["פליטות אוטואקוסטיות","OAE"],"definition":"בדיקת שמיעה מהירה ביילוד ובתינוקות — בודקת תפקוד שבלול","context":"חלק מסקר היילוד בישראל","category":"שמיעה"},
+  {"hebrew":"ABR — גזע מוח שמיעתי","english":"Auditory Brainstem Response","pronunciation":"ABR — אֵי-בִּי-אָר (Auditory Brainstem Response)","hebrew_transliteration_variants":["תגובת גזע מוח","ABR","BAER"],"definition":"בדיקה אלקטרופיזיולוגית לאבחון אובייקטיבי של שמיעה — מתאים לתינוקות","context":null,"category":"שמיעה"},
+  {"hebrew":"טימפנומטריה","english":"Tympanometry","pronunciation":"טִימְפָּנוֹמֶטְרִיָּה / tympanometry","hebrew_transliteration_variants":["טימפנוגרם","tympanogram"],"definition":"בדיקת לחץ אוזן תיכונה — מאתרת נוזל, חור בעור התוף, חסימה","context":null,"category":"שמיעה"},
+  {"hebrew":"נוזל באוזן (OME)","english":"Otitis Media with Effusion ('Glue Ear')","pronunciation":"נוֹזֵל בָּאוֹזֶן — OME (אוֹ-אֶם-אִי), אוֹזֶן דְּבֵקָה","hebrew_transliteration_variants":["OME","אוזן דביקה","glue ear","otitis media"],"definition":"נוזל בלי זיהום באוזן התיכונה — גורם לירידת שמיעה הולכתית שכיחה","context":"נפוץ מאוד בגיל 1–5 — משפיע על שפה. ניטור ע״י רופא אוזן-אף-גרון","category":"שמיעה"},
+  {"hebrew":"שתל קוכליארי (CI)","english":"Cochlear Implant","pronunciation":"שֶׁתֶל קוֹכְלֵיאָרִי — CI (סִי-אִי)","hebrew_transliteration_variants":["שתל שבלול","CI","שתל קולי","cochlear implant"],"definition":"שתל אלקטרוני שמגרה ישירות את עצב השמיעה — לירידה עמוקה","context":"מסובסד ע״י משרד הבריאות; סף: >70 dBHL; השתלה מגיל שנה","category":"שמיעה"},
+  {"hebrew":"מכשיר שמיעה","english":"Hearing Aid","pronunciation":"מַכְשִׁיר שְׁמִיעָה / hearing aid","hebrew_transliteration_variants":["hearing aid","מכשיר עזר שמיעה"],"definition":"מכשיר המגביר צלילים — מותאם אישית לפרופיל השמיעה","context":"מסובסד חלקית בסל קופת חולים","category":"שמיעה"},
+  {"hebrew":"מערכת FM / Roger","english":"FM / Roger System","pronunciation":"מַעֲרֶכֶת FM (אֶף-אֶם) / Roger","hebrew_transliteration_variants":["FM","Roger","מערכת שידור אלחוטי"],"definition":"שידור אלחוטי קולו של המדבר ישירות למכשיר שמיעה/CI","context":"נפוץ בכיתות שמיעה ובחינוך מיוחד בישראל","category":"שמיעה"},
+  {"hebrew":"כיתת שמיעה","english":"Hearing Impaired Classroom","pronunciation":"כִּיתַּת שְׁמִיעָה","hebrew_transliteration_variants":[],"definition":"כיתה מותאמת לילדים עם לקות שמיעה — אקוסטיקה, FM, קלינאית תקשורת","context":"קיימת בכל מחוז, תחת פיקוח משרד החינוך","category":"שמיעה"},
+  {"hebrew":"אקוסטיקת כיתה","english":"Classroom Acoustics","pronunciation":"אֲקוּסְטִיקַת כִּיתָּה","hebrew_transliteration_variants":[],"definition":"רמת הרעש ברקע ומשך ההד בכיתה — משפיעים ישירות על הבנת דיבור","context":null,"category":"שמיעה"},
+  {"hebrew":"CODA","english":"Children of Deaf Adults","pronunciation":"CODA — קוֹדָה (Children of Deaf Adults)","hebrew_transliteration_variants":["ילדים שומעים להורים חרשים"],"definition":"ילדים שומעים להורים חרשים — גדלים לרוב דו-לשוניים (ISL + עברית)","context":null,"category":"שמיעה"},
+  {"hebrew":"קהילת החרשים","english":"Deaf Community","pronunciation":"קְהִילַּת הַחֵרְשִׁים","hebrew_transliteration_variants":["קהילה חרשית","Deaf Community"],"definition":"קהילה עם זהות ותרבות ייחודית — לא רואים חירשות כ'מוגבלות'","context":null,"category":"שמיעה"},
+
+  {"hebrew":"מודעות פונולוגית","english":"Phonological Awareness","pronunciation":"מּוּדָּעוּת פוֹנוֹלוֹגִית / phonological awareness","hebrew_transliteration_variants":[],"definition":"יכולת לשמוע, לזהות ולעבד יחידות צליל בשפה (הברה, חרוז, פונמה)","context":"בסיס לקריאה בעברית — ניקוד עוזר בשלב הראשוני","category":"קריאה וכתיבה"},
+  {"hebrew":"מודעות פונמית","english":"Phonemic Awareness","pronunciation":"מּוּדָּעוּת פוֹנֵמִית / phonemic awareness","hebrew_transliteration_variants":[],"definition":"עבודה עם פונמות בנפרד: הפרדה, מיזוג, החלפה — שכבה עמוקה","context":null,"category":"קריאה וכתיבה"},
+  {"hebrew":"עקרון האלפביתי","english":"Alphabetic Principle","pronunciation":"עִקְרוֹן הָאַלְפַּבֵּיתִי","hebrew_transliteration_variants":[],"definition":"הבנת הקשר אות-צליל כבסיס לקריאה","context":"בעברית: ניקוד מלמד את הקשר; ללא ניקוד מצריך הסקה","category":"קריאה וכתיבה"},
+  {"hebrew":"פענוח","english":"Decoding","pronunciation":"פִּעֲנוּחַ / decoding","hebrew_transliteration_variants":["דקודינג"],"definition":"קריאת מילים בהתאם לקוד האותיות — הפעלת הידע הפונמי-גרפמי","context":null,"category":"קריאה וכתיבה"},
+  {"hebrew":"קריאה בניקוד","english":"Pointed Text Reading (Niqqud)","pronunciation":"קְרִיאָה בְּנִיקּוּד","hebrew_transliteration_variants":[],"definition":"קריאת עברית עם ניקוד — שלב ראשוני בחינוך עברי, שקוף פונולוגית יותר","context":"כיתה א׳-ב׳ — קפיצה לכתב רהוט ללא ניקוד בג׳-ד׳ קשה לילדים עם דיסלקציה","category":"קריאה וכתיבה"},
+  {"hebrew":"קריאה ללא ניקוד","english":"Unpointed Text Reading","pronunciation":"קְרִיאָה לְלֹא נִיקּוּד","hebrew_transliteration_variants":[],"definition":"קריאת עברית ללא סימני תנועה — דורשת הסקה לקסיקלית ותחבירית","context":"קושי ספציפי לדיסלקציה בעברית — שלב ג׳-ד׳","category":"קריאה וכתיבה"},
+  {"hebrew":"דיסלקציה","english":"Dyslexia","pronunciation":"דִּיסְלֶקְצִיָּה / dyslexia","hebrew_transliteration_variants":["דיסלקסיה","לקות קריאה"],"definition":"הפרעת למידה ספציפית בקריאה — בעיקר בפענוח ובשטף, על רקע קושי פונולוגי","context":"זכאות להתאמות בבגרות ובמבחנים דרך אבחון רשמי","category":"קריאה וכתיבה"},
+  {"hebrew":"דיסגרפיה","english":"Dysgraphia","pronunciation":"דִּיסְגְרַפְיָה / dysgraphia","hebrew_transliteration_variants":["לקות כתיבה"],"definition":"הפרעת למידה ספציפית בכתיבה: גרפומוטוריקה, כתיב, ארגון כתוב","context":null,"category":"קריאה וכתיבה"},
+  {"hebrew":"שטף קריאה","english":"Reading Fluency","pronunciation":"שֶׁטֶף קְרִיאָה","hebrew_transliteration_variants":[],"definition":"קריאה מהירה, מדויקת ומוטעמת — מאפשרת הקצאת משאבים להבנה","context":null,"category":"קריאה וכתיבה"},
+  {"hebrew":"הבנת הנקרא","english":"Reading Comprehension","pronunciation":"הֲבָנַת הַנִּקְרָא","hebrew_transliteration_variants":[],"definition":"הבנת משמעות הטקסט, הסקה, זיהוי רעיון מרכזי","context":null,"category":"קריאה וכתיבה"},
+  {"hebrew":"כתיב מלא וחסר","english":"Plene and Defective Spelling","pronunciation":"כְּתִיב מָלֵא וְחָסֵר","hebrew_transliteration_variants":[],"definition":"כתיב עם/ללא אמות קריאה (ו׳, י׳, ה׳) — ספציפי לעברית","context":"מקור לשגיאות כתיב שכיחות; נלמד בכיתה ב׳-ג׳","category":"קריאה וכתיבה"},
+  {"hebrew":"זיכרון עבודה","english":"Working Memory","pronunciation":"זִכְרוֹן עֲבוֹדָה / working memory","hebrew_transliteration_variants":["working memory"],"definition":"שמירת מידע זמני תוך כדי עיבוד — חשוב לקריאה, לכתיבה ולמתמטיקה","context":null,"category":"קריאה וכתיבה"},
+  {"hebrew":"מהירות עיבוד","english":"Processing Speed","pronunciation":"מַהִירוּת עִיבּוּד / processing speed","hebrew_transliteration_variants":["processing speed"],"definition":"קצב עיבוד המידע הקוגניטיבי — חלק ממרבית האבחונים הפסיכודידקטיים","context":null,"category":"קריאה וכתיבה"},
+  {"hebrew":"גרפומוטוריקה","english":"Graphomotor Skills","pronunciation":"גְּרַפּוֹמוֹטוֹרִיקָה / graphomotor","hebrew_transliteration_variants":["מוטוריקה עדינה של כתיבה"],"definition":"כישורים מוטוריים עדינים ייחודיים לכתיבה — אחיזת עט, לחץ, קצב","context":null,"category":"קריאה וכתיבה"},
+  {"hebrew":"כיוון כתיבה","english":"Directionality","pronunciation":"כִּיוּן כְּתִיבָה","hebrew_transliteration_variants":[],"definition":"הפנמת כיוון ימין-לשמאל בעברית — נבנה בגן ובכיתה א׳","context":"ילדים דו-לשוניים עברית/ערבית בדרך כלל מפנימים שני כיוונות","category":"קריאה וכתיבה"},
+  {"hebrew":"אבחון דידקטי","english":"Psychoeducational Assessment","pronunciation":"אִבְחוּן דִּידַקְטִי / psychoeducational assessment","hebrew_transliteration_variants":["אבחון פסיכודידקטי"],"definition":"אבחון ממוחשב/רגיל לקשיי למידה — ע״י מאבחן מוסמך","context":"נדרש לקבלת זכאות להתאמות בבית הספר ובבגרות","category":"קריאה וכתיבה"},
+
+  {"hebrew":"קלינאית/קלינאי תקשורת","english":"Speech-Language Pathologist (SLP)","pronunciation":"קְלִינַאִית/קְלִינַאי תִּקְשׁוֹרֶת — SLP (אֶס-אֶל-פִּי)","hebrew_transliteration_variants":["SLP","קלינאית תקשורת","קלינאי שפה"],"definition":"בעל/ת תואר B.Sc. / M.Sc. בקלינאות תקשורת — אבחון וטיפול בשפה, דיבור, שמיעה, בליעה","context":"רישוי ע״י משרד הבריאות; עבודה בקופת חולים, בית ספר, מרכז התפתחות, פרטי","category":"כללי / אבחון"},
+  {"hebrew":"שירות התפתחות הילד","english":"Child Development Center","pronunciation":"שֵׁרוּת הִתְפַּתְּחוּת הַיֶּלֶד","hebrew_transliteration_variants":["מרכז התפתחות","שירות התפתחות"],"definition":"שירות אבחוני ורב-מקצועי לגיל 0–6 הפועל בבתי חולים","context":"תחת משרד הבריאות; כולל קלינאיות תקשורת, פסיכולוגים, מרפאות בעיסוק ופיזיותרפיסטים","category":"כללי / אבחון"},
+  {"hebrew":"תחנת לאם ולילד (טיפת חלב)","english":"Mother & Child Health Clinic (Tipat Halav)","pronunciation":"טִיפַּת חָלָב","hebrew_transliteration_variants":["טיפת חלב","תחנת לאם ולילד"],"definition":"מעקב התפתחות ראשוני לילד עד גיל 6 — נקודת ההפניה הראשונה לחשד","context":"הפניה לשירות התפתחות הילד או לקלינאית תקשורת בקופה","category":"כללי / אבחון"},
+  {"hebrew":"קופת חולים","english":"Health Fund (HMO)","pronunciation":"קֻפַּת חוֹלִים / HMO","hebrew_transliteration_variants":["קופה","HMO","כללית","מכבי","מאוחדת","לאומית"],"definition":"כללית, מכבי, מאוחדת, לאומית — מממנות טיפול קלינאי במסגרת סל הבריאות","context":"מכסת שעות טיפול מוגבלת — לעתים נדרש ערר","category":"כללי / אבחון"},
+  {"hebrew":"ועדת השמה","english":"Special Education Placement Committee","pronunciation":"וַעֲדַת הַשָּׂמָה","hebrew_transliteration_variants":["ועדה"],"definition":"ועדה מחוזית המחליטה על מסגרת חינוכית לילד עם צרכים מיוחדים","context":"נקראת גם 'ועדה' — ההורים שותפים מלאים; ניתן לערור","category":"כללי / אבחון"},
+  {"hebrew":"גן שפה","english":"Language Preschool","pronunciation":"גַּן שָׂפָה","hebrew_transliteration_variants":[],"definition":"גן ייחודי לילדים עם הפרעות שפה (גיל 3–6), מנוהל ע״י קלינאית תקשורת","context":"פועל תחת רשות החינוך המקומית; הפניה דרך ועדת השמה","category":"כללי / אבחון"},
+  {"hebrew":"כיתת שפה","english":"Language Resource Room","pronunciation":"כִּיתַּת שָׂפָה","hebrew_transliteration_variants":[],"definition":"כיתת עזר לתלמידים עם הפרעות שפה בבית הספר היסודי","context":null,"category":"כללי / אבחון"},
+  {"hebrew":"תכנית עבודה אישית (תע״א / IEP)","english":"Individualized Education Plan (IEP)","pronunciation":"תָּכְנִית עֲבוֹדָה אִישִׁית — תע״א / IEP (אֵי-אִי-פִּי)","hebrew_transliteration_variants":["תע״א","תכנית עבודה אישית","IEP"],"definition":"תכנית שנתית המותאמת לצרכי הילד — יעדים, שיטות, הערכה","context":"חובה לכל ילד בחינוך מיוחד בישראל; נכתבת עם ההורים","category":"כללי / אבחון"},
+  {"hebrew":"שילוב","english":"Inclusion / Mainstreaming","pronunciation":"שִׁילּוּב / inclusion","hebrew_transliteration_variants":["אינטגרציה","mainstreaming"],"definition":"שילוב ילד עם צרכים מיוחדים במסגרת חינוכית רגילה עם תמיכה","context":null,"category":"כללי / אבחון"},
+  {"hebrew":"מבחן סטנדרטי","english":"Standardized Assessment","pronunciation":"מִבְחָן סְטַנְדַּרְטִי","hebrew_transliteration_variants":["מבחן מתוקנן","standardized test"],"definition":"מבחן עם נורמות אוכלוסייה — ציון Z, אחוזון, גיל שפתי","context":"מבחנים ישראליים: רלדן, מבת״ל, BESA עברי, PLS-5 עברית","category":"כללי / אבחון"},
+  {"hebrew":"MLU — אורך ממוצע אמירה","english":"Mean Length of Utterance","pronunciation":"MLU — אֶם-אֶל-יוּ (Mean Length of Utterance)","hebrew_transliteration_variants":["אורך ממוצע אמירה","MLU"],"definition":"מדד להתפתחות שפה: ממוצע מורפמות לאמירה בדיגום שפה ספונטנית","context":null,"category":"כללי / אבחון"},
+  {"hebrew":"דיגום שפה ספונטנית","english":"Language Sample Analysis","pronunciation":"דִּגּוּם שָׂפָה סְפּוֹנְטָנִית","hebrew_transliteration_variants":["language sample","ניתוח שפה ספונטנית"],"definition":"ניתוח דיבור חופשי: MLU, מגוון מילים, מורכבות תחבירית","context":null,"category":"כללי / אבחון"},
+  {"hebrew":"NICU — פגייה","english":"Neonatal Intensive Care Unit","pronunciation":"NICU — נִי-קְיוּ / פַּגִּיָּה","hebrew_transliteration_variants":["פגייה","NICU","פגייה ביילוד"],"definition":"יחידה לטיפול נמרץ ביילוד — ילדי NICU בסיכון מוגבר לקשיי שפה, דיבור ובליעה","context":null,"category":"כללי / אבחון"},
+  {"hebrew":"CP — שיתוק מוחין","english":"Cerebral Palsy","pronunciation":"CP — סֶרֶבְרַל פַּאלְזִי / שִׁיתּוּק מוֹחִין","hebrew_transliteration_variants":["שיתוק מוחין","CP","Cerebral Palsy"],"definition":"הפרעה מוטורית עקב פגיעה מוחית לא מתקדמת — לעתים גורמת לדיזארתריה ולקשיי בליעה","context":"מלווה ע״י שירות התפתחות הילד ותוכניות שיקום","category":"כללי / אבחון"},
+  {"hebrew":"ASD — הפרעת ספקטרום אוטיסטי","english":"Autism Spectrum Disorder","pronunciation":"ASD — אֵייי-אֶס-דִּי (Autism Spectrum Disorder)","hebrew_transliteration_variants":["אוטיזם","ספקטרום אוטיסטי","PDD","ASD"],"definition":"הפרעה התפתחותית עם קשיי תקשורת חברתית, AAC לעתים קרובות, פרגמטיקה","context":"קלינאית תקשורת בצוות רב-מקצועי בגן/בית ספר לאוטיזם","category":"כללי / אבחון"},
+  {"hebrew":"חיך שסוע","english":"Cleft Palate","pronunciation":"חֵיךְ שָׂסוּעַ / cleft palate","hebrew_transliteration_variants":["שפה שסועה","cleft lip and palate"],"definition":"מום מולד בחיך — גורם לנזיפות יתר, קשיי דיבור, בעיות הזנה","context":"צוות רב-מקצועי בבתי חולים גדולים (הדסה, שיבא)","category":"כללי / אבחון"},
+  {"hebrew":"תסמונת דאון","english":"Down Syndrome (Trisomy 21)","pronunciation":"תַּסְמֹנֶת דַּאוּן / Down syndrome","hebrew_transliteration_variants":["דאון","טריסומיה 21","Trisomy 21"],"definition":"כרומוזום 21 נוסף — אתגרי שפה, קשיי בליעה, ירידת שמיעה שכיחה","context":null,"category":"כללי / אבחון"},
+  {"hebrew":"עייפות תקשורתית","english":"Communication Fatigue","pronunciation":"עֲיֵיפוּת תִּקְשׁוֹרְתִּית","hebrew_transliteration_variants":["communication fatigue"],"definition":"עייפות מהמאמץ הנדרש לתקשורת — שכיחה ב-AAC, שמיעה, CI","context":"נפוצה אצל ילדים עם ירידת שמיעה, שתל קוכליארי או משתמשי AAC לאחר יום לימודים","category":"כללי / אבחון"},
+  {"hebrew":"ADHD ושפה","english":"ADHD and Language","pronunciation":"ADHD (אֵייי-דִי-אֵייי-צִי-דִי) וְשָׂפָה","hebrew_transliteration_variants":["הפרעת קשב","ADD","ADHD"],"definition":"קשיי קשב משפיעים על שפה פרגמטית, תפקודים ניהוליים ושיח פרגמטי ועל קריאה","context":null,"category":"כללי / אבחון"},
+  {"hebrew":"רב-מקצועיות","english":"Interdisciplinary Team","pronunciation":"רַב-מִקְצוֹעִיּוּת / interdisciplinary team","hebrew_transliteration_variants":["צוות רב-מקצועי","interdisciplinary"],"definition":"עבודה משותפת של קלינאית תקשורת, מרפאה בעיסוק, פיזיותרפיסט, פסיכולוג, מורה","context":"מודל עבודה מקובל בשירותי התפתחות הילד ובמסגרות חינוך מיוחד","category":"כללי / אבחון"}
+];
+
+let activeTab = "הכל";
+let query = "";
+
+function esc(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+function hl(text, q) {
+  if (!q || !text) return text || '';
+  return text.replace(new RegExp(`(${esc(q)})`, 'gi'), '<mark>$1</mark>');
+}
+function matches(t, q) {
+  if (!q) return true;
+  const lq = q.toLowerCase();
+  return (
+    t.hebrew.toLowerCase().includes(lq) ||
+    t.english.toLowerCase().includes(lq) ||
+    t.definition.toLowerCase().includes(lq) ||
+    (t.context && t.context.toLowerCase().includes(lq)) ||
+    (t.pronunciation && t.pronunciation.toLowerCase().includes(lq)) ||
+    (t.hebrew_transliteration_variants && t.hebrew_transliteration_variants.some(v => v.toLowerCase().includes(lq)))
+  );
+}
+
+function render() {
+  const q = query.trim();
+  const filtered = TERMS.filter(t =>
+    (activeTab === "הכל" || t.category === activeTab) && matches(t, q)
+  );
+
+  const main = document.getElementById('main');
+  const empty = document.getElementById('empty');
+  document.getElementById('countLabel').textContent = `${filtered.length} מונחים`;
+  main.querySelectorAll('.domain-section').forEach(s => s.remove());
+
+  if (filtered.length === 0) { empty.hidden = false; return; }
+  empty.hidden = true;
+
+  const groups = {};
+  filtered.forEach(t => { (groups[t.category] = groups[t.category] || []).push(t); });
+
+  DOMAIN_ORDER.forEach(cat => {
+    if (!groups[cat]) return;
+    const color = DOMAIN_META[cat];
+    const section = document.createElement('section');
+    section.className = 'domain-section';
+    section.innerHTML = `
+      <div class="domain-heading">
+        <div class="domain-dot" style="background:${color}"></div>
+        <h2>${cat}</h2>
+        <span>${groups[cat].length} מונחים</span>
+      </div>
+      <div class="cards"></div>`;
+    const cards = section.querySelector('.cards');
+    groups[cat].forEach(t => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.style.setProperty('--dc', color);
+      card.innerHTML = `
+        <div class="card-he">${hl(t.hebrew, q)}</div>
+        <div class="card-en">${hl(t.english, q)}</div>
+        ${t.pronunciation ? `<div class="card-pron">${hl(t.pronunciation, q)}</div>` : ''}
+        <div class="card-def">${hl(t.definition, q)}</div>
+        ${t.context ? `<div class="card-ctx">${hl(t.context, q)}</div>` : ''}`;
+      cards.appendChild(card);
+    });
+    main.appendChild(section);
+  });
+}
+
+function buildTabs() {
+  const container = document.getElementById('tabs');
+  ["הכל", ...DOMAIN_ORDER].forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'tab' + (cat === 'הכל' ? ' active' : '');
+    btn.dataset.cat = cat;
+    btn.setAttribute('role', 'tab');
+    btn.setAttribute('aria-selected', cat === 'הכל' ? 'true' : 'false');
+    const color = DOMAIN_META[cat];
+    btn.innerHTML = cat + (color ? `<span class="dot" style="background:${color}"></span>` : '');
+    btn.addEventListener('click', () => {
+      activeTab = cat;
+      container.querySelectorAll('.tab').forEach(b => {
+        b.classList.toggle('active', b.dataset.cat === cat);
+        b.setAttribute('aria-selected', b.dataset.cat === cat ? 'true' : 'false');
+      });
+      render();
+    });
+    container.appendChild(btn);
+  });
+}
+
+document.getElementById('search').addEventListener('input', e => { query = e.target.value; render(); });
+
+buildTabs();
+render();
+</script>
