@@ -362,13 +362,47 @@ function LocalNameField({ displayCode }) {
     <div className="mt-3 border-t border-slate-100 pt-3">
       <p className="mb-3 text-xs font-semibold text-slate-500">פרטים למסמכים</p>
 
+      <p className="mb-2 text-xs text-slate-400 font-medium">פרטים אישיים</p>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div>
-          <label className={labelCls}>שם להופעה במסמכים</label>
+          <label className={labelCls}>שם מטופל/ת</label>
           <input type="text" value={details.name} onChange={(e) => update('name', e.target.value)}
-            placeholder="שם המטופל/ת (רשות)" className={inputCls} />
+            placeholder="שם מלא" className={inputCls} />
         </div>
+        <div>
+          <label className={labelCls}>ת.ז</label>
+          <input type="text" value={details.idNumber} onChange={(e) => update('idNumber', e.target.value)}
+            placeholder="מספר זהות" className={inputCls} />
+        </div>
+        <div>
+          <label className={labelCls}>תאריך לידה</label>
+          <input type="text" value={details.birthDate} onChange={(e) => update('birthDate', e.target.value)}
+            placeholder="למשל: 15/03/2015" className={inputCls} />
+        </div>
+        <div>
+          <label className={labelCls}>קופת חולים</label>
+          <input type="text" value={details.healthFund} onChange={(e) => update('healthFund', e.target.value)}
+            placeholder="מכבי / כללית / מאוחדת / לאומית" className={inputCls} />
+        </div>
+        <div className="sm:col-span-2">
+          <label className={labelCls}>כתובת</label>
+          <input type="text" value={details.address} onChange={(e) => update('address', e.target.value)}
+            placeholder="רחוב, עיר" className={inputCls} />
+        </div>
+        <div className="sm:col-span-2">
+          <label className={labelCls}>שמות הורים</label>
+          <input type="text" value={details.parentNames} onChange={(e) => update('parentNames', e.target.value)}
+            placeholder="שמות ההורים" className={inputCls} />
+        </div>
+        <div className="sm:col-span-2">
+          <label className={labelCls}>גורם מפנה</label>
+          <input type="text" value={details.referralSource} onChange={(e) => update('referralSource', e.target.value)}
+            placeholder="שם ד״ר / מוסד / הורים" className={inputCls} />
+        </div>
+      </div>
 
+      <p className="mb-2 mt-4 text-xs text-slate-400 font-medium">פרטים קליניים</p>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div>
           <label className={labelCls}>סוג מסגרת</label>
           <select value={details.frameworkType} onChange={(e) => update('frameworkType', e.target.value)}
@@ -378,26 +412,22 @@ function LocalNameField({ displayCode }) {
             ))}
           </select>
         </div>
-
         <div>
           <label className={labelCls}>בדיקת שמיעה — תאריך</label>
           <input type="text" value={details.hearingTestDate} onChange={(e) => update('hearingTestDate', e.target.value)}
             placeholder="למשל: 03/2025" className={inputCls} />
         </div>
-
-        <div>
+        <div className="sm:col-span-2">
           <label className={labelCls}>בדיקת שמיעה — תוצאה</label>
           <input type="text" value={details.hearingTestResult} onChange={(e) => update('hearingTestResult', e.target.value)}
             placeholder="למשל: תקין / ירידה קלה בתדרים גבוהים" className={inputCls} />
         </div>
-
         <div className="sm:col-span-2">
           <label className={labelCls}>אבחונים נוספים</label>
           <textarea value={details.additionalDiagnoses} onChange={(e) => update('additionalDiagnoses', e.target.value)}
             placeholder="למשל: ADHD, ASD, עיכוב שפה..." rows={2}
             className={`${inputCls} resize-none`} />
         </div>
-
         <div className="sm:col-span-2">
           <label className={labelCls}>המלצות למסגרת</label>
           <textarea value={details.frameworkRecommendations} onChange={(e) => update('frameworkRecommendations', e.target.value)}

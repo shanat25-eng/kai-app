@@ -121,12 +121,19 @@ function buildPrintableHtml({ doc, patient, clinicianName, licenseNumber, localP
       <table class="meta">
         <tr>
           <td><strong>שם המטופל/ת:</strong> ${name ? escapeHtml(name) : '_______________________'}</td>
-          <td><strong>ת.ז.:</strong> ___________________</td>
+          <td><strong>ת.ז.:</strong> ${d.idNumber ? escapeHtml(d.idNumber) : '___________________'}</td>
+        </tr>
+        <tr>
+          <td><strong>תאריך לידה:</strong> ${d.birthDate ? escapeHtml(d.birthDate) : '_______________'}</td>
+          <td><strong>קופת חולים:</strong> ${d.healthFund ? escapeHtml(d.healthFund) : '_______________'}</td>
         </tr>
         <tr>
           <td><strong>קבוצת גיל:</strong> ${escapeHtml(patient?.ageRange ?? '—')}</td>
           <td><strong>תחום טיפול:</strong> ${escapeHtml(patient?.treatmentArea ?? '—')}</td>
         </tr>
+        ${d.parentNames ? `<tr><td colspan="2"><strong>שמות הורים:</strong> ${escapeHtml(d.parentNames)}</td></tr>` : ''}
+        ${d.referralSource ? `<tr><td colspan="2"><strong>גורם מפנה:</strong> ${escapeHtml(d.referralSource)}</td></tr>` : ''}
+        ${d.address ? `<tr><td colspan="2"><strong>כתובת:</strong> ${escapeHtml(d.address)}</td></tr>` : ''}
         <tr>
           <td><strong>סוג מסגרת:</strong> ${d.frameworkType ? escapeHtml(d.frameworkType) : '_______________'}</td>
           <td><strong>בדיקת שמיעה:</strong> ${d.hearingTestDate || d.hearingTestResult

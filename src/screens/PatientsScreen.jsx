@@ -90,8 +90,8 @@ export default function PatientsScreen() {
 
   async function handleCreatePatient(formData) {
     await createPatient(formData, clinician.id)
-    setIsModalOpen(false)
     await loadPatients()
+    // modal stays open to show step 2 (local details); it calls onClose itself
   }
 
   async function handleConfirmDelete() {

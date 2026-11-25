@@ -36,7 +36,15 @@ export function getLocalPatientName(displayCode) {
 
 function _empty() {
   return {
+    // intake / demographic
     name: '',
+    idNumber: '',
+    birthDate: '',
+    address: '',
+    healthFund: '',
+    parentNames: '',
+    referralSource: '',
+    // clinical
     hearingTestDate: '',
     hearingTestResult: '',
     additionalDiagnoses: '',
