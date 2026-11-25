@@ -98,6 +98,13 @@ export function AppViewProvider({ children }) {
     setActiveViewInternal(VIEWS.DOCUMENT_EDIT)
   }
 
+  function openDocumentByPatient(patientId, documentId) {
+    if (!patientId || !documentId) return
+    setSelectedPatientId(patientId)
+    setSelectedDocumentId(documentId)
+    setActiveViewInternal(VIEWS.DOCUMENT_EDIT)
+  }
+
   return (
     <AppViewContext.Provider
       value={{
@@ -110,6 +117,7 @@ export function AppViewProvider({ children }) {
         backToPatientWorkspace,
         selectedDocumentId,
         openDocumentEdit,
+        openDocumentByPatient,
       }}
     >
       {children}
