@@ -147,11 +147,25 @@ function buildPrintableHtml({ doc, patient, clinicianName, licenseNumber, localP
     ${sectionsHtml}
     <div class="signature">
       <div>בברכה,</div>
-      <div><strong>${clinicianName ? escapeHtml(clinicianName) : '_______________________'}</strong></div>
-      <div>קלינאית תקשורת | מ.ר. ${licenseNumber ? escapeHtml(licenseNumber) : '____________'}</div>
+      <table style="width:100%;margin-top:14px;border-collapse:collapse;">
+        <tr>
+          <td style="width:50%;padding:4px 8px 4px 0;vertical-align:top;">
+            <div style="font-size:10.5pt;color:#475569;margin-bottom:2px;">שם הבודקת:</div>
+            <div style="font-weight:bold;">${clinicianName ? escapeHtml(clinicianName) : '_______________________'}</div>
+            <div style="font-size:10pt;color:#475569;">קלינאית תקשורת</div>
+            <div style="font-size:10pt;color:#475569;">מ.ר. ${licenseNumber ? escapeHtml(licenseNumber) : '____________'}</div>
+          </td>
+          <td style="width:50%;padding:4px 0 4px 8px;vertical-align:top;border-right:1px solid #e2e8f0;">
+            <div style="font-size:10.5pt;color:#475569;margin-bottom:2px;">תאריך:</div>
+            <div>${escapeHtml(approvedDate)}</div>
+            <div style="margin-top:28px;border-bottom:1px solid #334155;width:140px;">&nbsp;</div>
+            <div style="font-size:9pt;color:#64748b;margin-top:3px;">חתימה וחותמת</div>
+          </td>
+        </tr>
+      </table>
     </div>
-    <div class="footer-note">
-      קוד מערכת: ${escapeHtml(patient?.displayCode ?? '—')} · גרסה ${escapeHtml(doc.version)} · אושר ב-${escapeHtml(approvedDate)}
+    <div class="footer-note" style="text-align:center;">
+      הופק באמצעות K.ai &nbsp;|&nbsp; &copy; 2026 K.ai &nbsp;|&nbsp; פיילוט — לשימוש בדיקה בלבד
     </div>
   </div>
 </body>
