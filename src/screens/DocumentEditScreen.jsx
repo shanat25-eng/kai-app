@@ -337,7 +337,6 @@ export default function DocumentEditScreen() {
   }
 
   async function handleCopy() {
-    if (!locked) return
     try {
       await navigator.clipboard.writeText(exportText())
       await logDocumentExport(currentDocument.id, clinician.id)
@@ -377,12 +376,6 @@ export default function DocumentEditScreen() {
     }
   }
 
-  // חסימת Ctrl+C / גזירה מהמסמך לפני אישור
-  function blockCopyBeforeApproval(e) {
-    if (locked) return
-    e.preventDefault()
-    setNotice('אפשר להעתיק רק אחרי אישור המסמך')
-  }
 
   // ---- רינדור ----
 
@@ -465,7 +458,7 @@ export default function DocumentEditScreen() {
         <Legend />
       </div>
 
-      <div className="space-y-3" onCopy={blockCopyBeforeApproval} onCut={blockCopyBeforeApproval}>
+      <div className="space-y-3">
         {currentDocument.sections.map((section) => (
           <SectionCard
             key={section.key}
@@ -912,17 +905,13 @@ function ExportBar({ locked, onCopy, onDownloadWord, onPrintPdf }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3">
       <p className="text-xs text-slate-500">
-        {locked
-          ? 'המסמך מאושר — אפשר להעתיק, להוריד ל-Word או לשמור כ-PDF.'
-          : 'ניתן להוריד ל-Word או לשמור כ-PDF בכל שלב. העתקה זמינה אחרי אישור.'}
+        אפשר להעתיק, להוריד ל-Word או לשמור כ-PDF בכל שלב.
       </p>
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
           onClick={onCopy}
-          disabled={!locked}
-          title={locked ? '' : 'זמין אחרי אישור'}
-          className={`${btn} border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:bg-slate-50 disabled:text-slate-300`}
+          className={`${btn} border-slate-200 bg-white text-slate-700 hover:bg-slate-50`}
         >
           <Copy className="h-4 w-4" aria-hidden="true" />
           העתקה
