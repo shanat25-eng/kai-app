@@ -1,16 +1,24 @@
-// שכבת תקשורת עתידית מול ה-Backend האמיתי (כלל ברזל #3: Architecture Ready).
-// כרגע אין שום Backend מחובר, ואין Mock Data קשיח בתוך רכיבי ה-UI —
-// כשיהיה שרת אמיתי, כל קריאה תעבור דרך apiRequest() ותקבל תשובה אמיתית,
-// בלי לשנות אף קומפוננטה שצורכת את הנתונים.
-//
-// שימוש ב-fetch סטנדרטי בלבד (HTTP/HTTPS) — תואם לדרישת NetFree Compatibility.
+// שכבת תקשורת מול ה-Backend — מצרפת אוטומטית את ה-Access Token של המשתמשת המחוברת
+// כדי שרק קלינאית מחוברת תוכל להפעיל את שירותי ה-AI.
+import { supabase } from './supabaseClient'
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
+async function getAuthHeaders() {
+  const { data } = await supabase.auth.getSession()
+  const token = data?.session?.access_token
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
 export async function apiRequest(path, options = {}) {
+  const authHeaders = await getAuthHeaders()
   const response = await fetch(`${BASE_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...options.headers },
     ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...authHeaders,
+      ...options.headers,
+    },
   })
 
   if (!response.ok) {
@@ -20,12 +28,11 @@ export async function apiRequest(path, options = {}) {
   return response.json()
 }
 
-// שלב 6 (הקלטה): להעלאת קבצים (multipart/form-data — כמו אודיו ל-/api/transcribe).
-// לא ניתן להשתמש ב-apiRequest הרגיל: הוא קובע תמיד Content-Type: application/json,
-// בעוד ש-FormData חייב שהדפדפן עצמו יקבע Content-Type עם ה-boundary הנכון.
 export async function apiUpload(path, formData) {
+  const authHeaders = await getAuthHeaders()
   const response = await fetch(`${BASE_URL}${path}`, {
     method: 'POST',
+    headers: authHeaders,
     body: formData,
   })
 
