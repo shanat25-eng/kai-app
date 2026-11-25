@@ -352,7 +352,8 @@ export default function DocumentEditScreen() {
     downloadDocumentAsWord({
       doc: currentDocument,
       patient,
-      clinicianName: clinician?.fullName || clinician?.name || '',
+      clinicianName: clinician?.displayName || '',
+      licenseNumber: clinician?.licenseNumber || '',
     })
     await logDocumentExport(currentDocument.id, clinician.id)
     setNotice('קובץ Word הורד בהצלחה')
@@ -364,7 +365,8 @@ export default function DocumentEditScreen() {
       printDocumentAsPdf({
         doc: currentDocument,
         patient,
-        clinicianName: clinician?.fullName || clinician?.name || '',
+        clinicianName: clinician?.displayName || '',
+      licenseNumber: clinician?.licenseNumber || '',
       })
       await logDocumentExport(currentDocument.id, clinician.id)
     } catch (err) {
