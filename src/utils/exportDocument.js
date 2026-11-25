@@ -9,7 +9,7 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;')
 }
 
-function buildPrintableHtml({ doc, patient, clinicianName, licenseNumber }) {
+function buildPrintableHtml({ doc, patient, clinicianName, licenseNumber, localPatientName }) {
   const title = DOCUMENT_TYPE_CONFIG[doc.documentType]?.label ?? 'מסמך קליני'
   const approvedDate = doc.approvedAt ? formatDate(doc.approvedAt) : formatDate(doc.createdAt)
   const sectionsHtml = (doc.sections ?? [])
@@ -118,7 +118,7 @@ function buildPrintableHtml({ doc, patient, clinicianName, licenseNumber }) {
       <h1>${escapeHtml(title)}</h1>
       <table class="meta">
         <tr>
-          <td><strong>שם המטופל/ת:</strong> _______________________</td>
+          <td><strong>שם המטופל/ת:</strong> ${localPatientName ? escapeHtml(localPatientName) : '_______________________'}</td>
           <td><strong>ת.ז.:</strong> ___________________</td>
         </tr>
         <tr>
@@ -145,8 +145,8 @@ function buildPrintableHtml({ doc, patient, clinicianName, licenseNumber }) {
 </html>`
 }
 
-export function downloadDocumentAsWord({ doc, patient, clinicianName, licenseNumber }) {
-  const html = buildPrintableHtml({ doc, patient, clinicianName, licenseNumber })
+export function downloadDocumentAsWord({ doc, patient, clinicianName, licenseNumber, localPatientName }) {
+  const html = buildPrintableHtml({ doc, patient, clinicianName, licenseNumber, localPatientName })
   const wordHtml = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40" dir="rtl" lang="he">${html.slice(html.indexOf('<head>'))}`
   const blob = new Blob(['\ufeff', wordHtml], { type: 'application/msword;charset=utf-8' })
   const url = URL.createObjectURL(blob)
@@ -159,8 +159,8 @@ export function downloadDocumentAsWord({ doc, patient, clinicianName, licenseNum
   URL.revokeObjectURL(url)
 }
 
-export function printDocumentAsPdf({ doc, patient, clinicianName, licenseNumber }) {
-  const html = buildPrintableHtml({ doc, patient, clinicianName, licenseNumber })
+export function printDocumentAsPdf({ doc, patient, clinicianName, licenseNumber, localPatientName }) {
+  const html = buildPrintableHtml({ doc, patient, clinicianName, licenseNumber, localPatientName })
   const win = window.open('', '_blank', 'width=820,height=950')
   if (!win) {
     throw new Error('הדפדפן חסם חלון קופץ — אפשרי חלונות קופצים או הורידי ל-Word')

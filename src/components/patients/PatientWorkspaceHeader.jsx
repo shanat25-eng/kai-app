@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Pencil, Check, X, TriangleAlert } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { updatePatient } from '../../api/patients'
+import { getLocalPatientName, setLocalPatientName } from '../../utils/localPatientName'
 import {
   AGE_RANGE_OPTIONS,
   TREATMENT_AREA_OPTIONS,
@@ -339,7 +340,36 @@ export default function PatientWorkspaceHeader({ patient, onPatientUpdate }) {
           </div>
         )}
       </div>
+
+      <LocalNameField displayCode={displayCode} />
     </header>
+  )
+}
+
+function LocalNameField({ displayCode }) {
+  const [value, setValue] = useState(() => getLocalPatientName(displayCode))
+
+  function handleChange(e) {
+    const v = e.target.value
+    setValue(v)
+    setLocalPatientName(displayCode, v)
+  }
+
+  return (
+    <div className="mt-3 border-t border-slate-100 pt-3">
+      <label htmlFor={`localname-${displayCode}`} className="mb-1 block text-xs font-medium text-slate-500">
+        שם להופעה במסמכים
+      </label>
+      <input
+        id={`localname-${displayCode}`}
+        type="text"
+        value={value}
+        onChange={handleChange}
+        placeholder="שם המטופל/ת (רשות)"
+        className="w-full max-w-xs rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-800 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-400"
+      />
+      <p className="mt-1 text-xs text-slate-400">לא נשמר בשרת, רק במכשיר זה</p>
+    </div>
   )
 }
 
