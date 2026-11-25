@@ -181,3 +181,19 @@ export function summaryToSections(summary) {
     text: summary[key] ?? '',
   }))
 }
+
+/**
+ * יצירת טיוטה מובנית לסוגי המסמכים הקליניים הנוספים:
+ * initial_assessment (אבחון ראשוני), series_summary (סיכום סדרה), continuation_request (בקשה להמשך).
+ */
+export async function generateClinicalDocument({ documentType, sourceText, patientContext }) {
+  const { sections, generatedText, validation } = await apiRequest('/generate-document', {
+    method: 'POST',
+    body: JSON.stringify({ documentType, sourceText, patientContext }),
+  })
+  return {
+    sections: Array.isArray(sections) ? sections : [],
+    generatedText: generatedText ?? '',
+    validation: validation ?? null,
+  }
+}
