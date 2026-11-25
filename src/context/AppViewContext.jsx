@@ -14,6 +14,7 @@ export const VIEWS = {
   PATIENTS: 'patients',
   PATIENT_WORKSPACE: 'patient_workspace',
   CREATE_SESSION_SUMMARY: 'create_session_summary',
+  CREATE_CLINICAL_DOCUMENT: 'create_clinical_document',
   DOCUMENT_EDIT: 'document_edit',
   DOCUMENTS: 'documents',
   SETTINGS: 'settings',
@@ -25,6 +26,7 @@ export const VIEWS = {
 const PATIENT_SCOPED_VIEWS = new Set([
   VIEWS.PATIENT_WORKSPACE,
   VIEWS.CREATE_SESSION_SUMMARY,
+  VIEWS.CREATE_CLINICAL_DOCUMENT,
   VIEWS.DOCUMENT_EDIT,
 ])
 
@@ -38,6 +40,7 @@ export function AppViewProvider({ children }) {
   // ה-ID של המסמך שנפתח לעריכה ב-DocumentEditScreen. כמו selectedPatientId —
   // רק מזהה פנימי, לא שדה שמוצג. מתאפס בכל יציאה מ"עולם המטופל".
   const [selectedDocumentId, setSelectedDocumentId] = useState(null)
+  const [selectedDocumentType, setSelectedDocumentType] = useState(null)
 
   // עוטף את setActiveView הפנימי כדי לוודא ש-selectedPatientId מתאפס
   // כשמנווטים למסך עליון (מטופלים/מסמכים/הגדרות) — כדי לא להשאיר state
@@ -67,6 +70,15 @@ export function AppViewProvider({ children }) {
   // פותח את מסך יצירת סיכום המפגש. דורש שיהיה כבר selectedPatientId
   // (המשתמשת חייבת להיות בתוך workspace של מטופל כדי להגיע לכפתור).
   // אם משום מה אין — נופל בחזרה למסך המטופלים במקום להראות מסך שבור.
+  function openCreateClinicalDocument(documentType) {
+    if (!selectedPatientId) {
+      setActiveViewInternal(VIEWS.PATIENTS)
+      return
+    }
+    setSelectedDocumentType(documentType)
+    setActiveViewInternal(VIEWS.CREATE_CLINICAL_DOCUMENT)
+  }
+
   function openCreateSessionSummary() {
     if (!selectedPatientId) {
       setActiveViewInternal(VIEWS.PATIENTS)
@@ -114,6 +126,8 @@ export function AppViewProvider({ children }) {
         openPatientWorkspace,
         closePatientWorkspace,
         openCreateSessionSummary,
+        selectedDocumentType,
+        openCreateClinicalDocument,
         backToPatientWorkspace,
         selectedDocumentId,
         openDocumentEdit,
