@@ -349,7 +349,6 @@ export default function DocumentEditScreen() {
   }
 
   async function handleDownloadWord() {
-    if (!locked) return
     downloadDocumentAsWord({
       doc: currentDocument,
       patient,
@@ -363,7 +362,6 @@ export default function DocumentEditScreen() {
   }
 
   async function handlePrintPdf() {
-    if (!locked) return
     try {
       printDocumentAsPdf({
         doc: currentDocument,
@@ -915,8 +913,8 @@ function ExportBar({ locked, onCopy, onDownloadWord, onPrintPdf }) {
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3">
       <p className="text-xs text-slate-500">
         {locked
-          ? 'המסמך מאושר — אפשר להעתיק, להוריד ל-Word (עם שדות מילוי למעלה) או לשמור כ-PDF.'
-          : 'העתקה וייצוא ל-Word/PDF יתאפשרו אחרי אישור המסמך.'}
+          ? 'המסמך מאושר — אפשר להעתיק, להוריד ל-Word או לשמור כ-PDF.'
+          : 'ניתן להוריד ל-Word או לשמור כ-PDF בכל שלב. העתקה זמינה אחרי אישור.'}
       </p>
       <div className="flex flex-wrap gap-2">
         <button
@@ -932,9 +930,7 @@ function ExportBar({ locked, onCopy, onDownloadWord, onPrintPdf }) {
         <button
           type="button"
           onClick={onDownloadWord}
-          disabled={!locked}
-          title={locked ? '' : 'זמין אחרי אישור'}
-          className={`${btn} border-brand-200 bg-brand-50 text-brand-700 hover:bg-brand-100 disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-300`}
+          className={`${btn} border-brand-200 bg-brand-50 text-brand-700 hover:bg-brand-100`}
         >
           <Download className="h-4 w-4" aria-hidden="true" />
           הורדה ל-Word
@@ -942,9 +938,7 @@ function ExportBar({ locked, onCopy, onDownloadWord, onPrintPdf }) {
         <button
           type="button"
           onClick={onPrintPdf}
-          disabled={!locked}
-          title={locked ? '' : 'זמין אחרי אישור'}
-          className={`${btn} border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:bg-slate-50 disabled:text-slate-300`}
+          className={`${btn} border-slate-200 bg-white text-slate-700 hover:bg-slate-50`}
         >
           <Download className="h-4 w-4" aria-hidden="true" />
           שמירה כ-PDF
