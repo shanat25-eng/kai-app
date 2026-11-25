@@ -386,7 +386,7 @@ export default function DocumentEditScreen() {
   if (step === 'loading') {
     return (
       <div className="space-y-6">
-        <BackLink onClick={backToPatientWorkspace} label="חזרה למסך העבודה" />
+        <BackLink onClick={backToPatientWorkspace} label="חזרה למטופל" />
         <div className="h-12 animate-pulse rounded-xl border border-slate-200 bg-slate-100" aria-hidden="true" />
         <div className="h-64 animate-pulse rounded-xl border border-slate-200 bg-slate-100" aria-hidden="true" />
       </div>
@@ -396,7 +396,7 @@ export default function DocumentEditScreen() {
   if (step === 'error') {
     return (
       <div className="space-y-4">
-        <BackLink onClick={backToPatientWorkspace} label="חזרה" />
+        <BackLink onClick={backToPatientWorkspace} label="חזרה למטופל" />
         <ErrorCard message={loadError} />
       </div>
     )
@@ -408,7 +408,7 @@ export default function DocumentEditScreen() {
 
   return (
     <div className="space-y-6">
-      <BackLink onClick={backToPatientWorkspace} label="חזרה למסך העבודה של המטופל" />
+      <BackLink onClick={backToPatientWorkspace} label="חזרה למטופל" />
 
       <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3">
         <span className="rounded-lg bg-brand-50 px-2.5 py-1 text-sm font-bold text-brand-700">
