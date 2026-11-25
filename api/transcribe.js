@@ -1,3 +1,4 @@
+import { requireAuthenticatedUser } from './_auth.js'
 export const config = {
   api: {
     bodyParser: false,
@@ -16,6 +17,9 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
+
+  const authUser = await requireAuthenticatedUser(req, res)
+  if (!authUser) return
 
   let file
   try {
