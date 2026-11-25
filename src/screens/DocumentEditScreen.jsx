@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   ArrowRight,
   Check,
@@ -12,8 +12,12 @@ import {
   CheckCircle2,
   FilePlus2,
   Sparkles,
+  Mic,
+  Square,
+  Loader2,
 } from 'lucide-react'
 import { rephraseSection } from '../api/documentGeneration'
+import { apiUpload } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import { useAppView } from '../context/AppViewContext'
 import { getPatient } from '../api/patients'
@@ -65,6 +69,13 @@ export default function DocumentEditScreen() {
   // נשמר כ-aiText של הסעיף, כדי שיסומן בסגול והעריכות שלה אחריו בצהוב.
   const [draftAiText, setDraftAiText] = useState(null)
   const [rephrase, setRephrase] = useState(EMPTY_REPHRASE)
+
+  // הקלטה ותמלול ישירות לתוך סעיף בעריכה
+  const [isRecording, setIsRecording] = useState(false)
+  const [isTranscribing, setIsTranscribing] = useState(false)
+  const [recordError, setRecordError] = useState(null)
+  const mediaRecorderRef = useRef(null)
+  const audioChunksRef = useRef([])
 
   const [confirmedRead, setConfirmedRead] = useState(false)
   const [approveMessage, setApproveMessage] = useState(null)
@@ -136,11 +147,69 @@ export default function DocumentEditScreen() {
   }
 
   function cancelEdit() {
+    if (isRecording) {
+      try {
+        mediaRecorderRef.current?.stop()
+      } catch {}
+      setIsRecording(false)
+    }
     setEditingKey(null)
     setDraftText('')
     setSectionIssues(null)
     setDraftAiText(null)
     setRephrase(EMPTY_REPHRASE)
+    setRecordError(null)
+  }
+
+  async function handleStartSectionRecording() {
+    setRecordError(null)
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const mediaRecorder = new MediaRecorder(stream)
+      audioChunksRef.current = []
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data)
+      }
+
+      mediaRecorder.onstop = async () => {
+        stream.getTracks().forEach((track) => track.stop())
+        const mime = mediaRecorder.mimeType || 'audio/webm'
+        const audioBlob = new Blob(audioChunksRef.current, { type: mime })
+        if (audioBlob.size === 0) {
+          setRecordError('לא נקלט קול מהמיקרופון. בדקי שהמיקרופון מחובר ולא מושתק.')
+          return
+        }
+        const ext = mime.includes('mp4') ? 'm4a' : mime.includes('ogg') ? 'ogg' : 'webm'
+        setIsTranscribing(true)
+        try {
+          const formData = new FormData()
+          formData.append('file', audioBlob, `section-edit.${ext}`)
+          const { transcript } = await apiUpload('/transcribe', formData)
+          if (transcript) {
+            setDraftText((prev) => (prev.trim() ? `${prev.trim()} ${transcript}` : transcript))
+            setSectionIssues(null)
+          }
+        } catch (err) {
+          console.error('kai: section transcription failed', err)
+          setRecordError('התמלול נכשל. נסי שוב או הקלידי ידנית.')
+        } finally {
+          setIsTranscribing(false)
+        }
+      }
+
+      mediaRecorder.start(250)
+      mediaRecorderRef.current = mediaRecorder
+      setIsRecording(true)
+    } catch (err) {
+      console.error('kai: microphone access failed in section edit', err)
+      setRecordError('לא ניתן לגשת למיקרופון. בדקי הרשאות בדפדפן.')
+    }
+  }
+
+  function handleStopSectionRecording() {
+    mediaRecorderRef.current?.stop()
+    setIsRecording(false)
   }
 
   // ---- "הצע ניסוח" ----
@@ -397,6 +466,11 @@ export default function DocumentEditScreen() {
             onRephrase={() => requestRephrase(false)}
             onRephraseAnyway={() => requestRephrase(true)}
             onPickSuggestion={pickSuggestion}
+            isRecording={editingKey === section.key && isRecording}
+            isTranscribing={editingKey === section.key && isTranscribing}
+            recordError={editingKey === section.key ? recordError : null}
+            onStartRecording={handleStartSectionRecording}
+            onStopRecording={handleStopSectionRecording}
             issues={editingKey === section.key ? sectionIssues : null}
             onEdit={() => startEdit(section)}
             onSave={() => saveSection(false)}
@@ -527,6 +601,11 @@ function SectionCard({
   onRephrase,
   onRephraseAnyway,
   onPickSuggestion,
+  isRecording,
+  isTranscribing,
+  recordError,
+  onStartRecording,
+  onStopRecording,
   issues,
   onEdit,
   onSave,
@@ -584,6 +663,38 @@ function SectionCard({
                 : 'border-slate-300'
             }`}
           />
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={isRecording ? onStopRecording : onStartRecording}
+              disabled={isTranscribing}
+              className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+                isRecording
+                  ? 'border-red-400 bg-red-50 text-red-700 hover:bg-red-100'
+                  : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
+              }`}
+            >
+              {isRecording ? (
+                <Square className="h-3.5 w-3.5" aria-hidden="true" />
+              ) : (
+                <Mic className="h-3.5 w-3.5" aria-hidden="true" />
+              )}
+              {isRecording ? 'עצור הקלטה' : 'הקלטת תוספת'}
+            </button>
+            {isTranscribing && (
+              <span className="flex items-center gap-1 text-xs text-slate-500">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                מתמללת…
+              </span>
+            )}
+          </div>
+          {recordError && (
+            <p className="flex items-start gap-1 text-xs text-red-600">
+              <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              {recordError}
+            </p>
+          )}
 
           <RephrasePanel
             rephrase={rephrase}
