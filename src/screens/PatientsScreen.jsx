@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import { UserRoundPlus, SearchX } from 'lucide-react'
+import { UserRoundPlus, SearchX, TriangleAlert } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useAppView } from '../context/AppViewContext'
-import { listPatients, createPatient } from '../api/patients'
+import { listPatients, createPatient, deletePatient } from '../api/patients'
 import { listSessionsByPatient } from '../api/sessions'
 import { listDocumentsByPatient } from '../api/documents'
 import { DOCUMENT_STATUS } from '../constants/documentStatus'
@@ -53,6 +53,9 @@ export default function PatientsScreen() {
   const [treatmentAreaFilter, setTreatmentAreaFilter] = useState('')
 
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [deleteCandidate, setDeleteCandidate] = useState(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState(null)
 
   async function loadPatients() {
     setIsLoading(true)
@@ -87,10 +90,24 @@ export default function PatientsScreen() {
 
   async function handleCreatePatient(formData) {
     await createPatient(formData, clinician.id)
-    // תיעוד ה-AuditLog קורה אוטומטית בתוך createPatient (api/patients.js) —
-    // אין צורך לקרוא ל-logAction כאן.
     setIsModalOpen(false)
     await loadPatients()
+  }
+
+  async function handleConfirmDelete() {
+    if (!deleteCandidate) return
+    setIsDeleting(true)
+    setDeleteError(null)
+    try {
+      await deletePatient(deleteCandidate.id, clinician.id)
+      setPatients((prev) => prev.filter((p) => p.id !== deleteCandidate.id))
+      setDeleteCandidate(null)
+    } catch (err) {
+      console.error('kai: failed to delete patient', err)
+      setDeleteError('המחיקה נכשלה. נסי שוב.')
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   const hasNoPatientsAtAll = !isLoading && !loadError && patients.length === 0
@@ -166,6 +183,7 @@ export default function PatientsScreen() {
                   key={patient.id}
                   patient={patient}
                   onSelect={() => openPatientWorkspace(patient.id)}
+                  onDelete={() => { setDeleteError(null); setDeleteCandidate(patient) }}
                 />
               ))}
             </div>
@@ -175,6 +193,57 @@ export default function PatientsScreen() {
 
       {isModalOpen && (
         <PatientFormModal onClose={() => setIsModalOpen(false)} onSubmit={handleCreatePatient} />
+      )}
+
+      {deleteCandidate && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-dialog-title"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={(e) => { if (e.target === e.currentTarget && !isDeleting) setDeleteCandidate(null) }}
+        >
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100">
+                <TriangleAlert className="h-5 w-5 text-red-600" aria-hidden="true" />
+              </div>
+              <h2 id="delete-dialog-title" className="text-base font-bold text-slate-900">
+                מחיקת מטופל
+              </h2>
+            </div>
+
+            <p className="mb-1 text-sm text-slate-700">
+              למחוק את המטופל <span className="font-semibold">{deleteCandidate.displayCode}</span>?
+            </p>
+            <p className="mb-5 text-sm text-slate-500">
+              כל המסמכים והמפגשים שלו יימחקו לצמיתות. לא ניתן לשחזר.
+            </p>
+
+            {deleteError && (
+              <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{deleteError}</p>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+                className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-60"
+              >
+                {isDeleting ? 'מוחק…' : 'מחיקה'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setDeleteCandidate(null)}
+                disabled={isDeleting}
+                className="flex-1 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60"
+              >
+                ביטול
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

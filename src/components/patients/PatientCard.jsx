@@ -1,15 +1,8 @@
-import { Calendar, FileText } from 'lucide-react'
+import { Calendar, FileText, Trash2 } from 'lucide-react'
 import { formatDate } from '../../utils/formatDate'
 import StatusBadge from '../common/StatusBadge'
 
-// כרטיס אחד = מטופל אחד. מקבל אך ורק שדות מ-entities.js/Patient בתוספת
-// שני שדות מחושבים (lastSessionDate, documentsCount) שמורכבים ב-PatientsScreen
-// מ-sessions.js/documents.js — הכרטיס עצמו לא קורא ל-API בכלל.
-//
-// onSelect אופציונלי: אם מסופק — הכרטיס הופך לכפתור נגיש מלא (מקלדת + focus ring),
-// ולחיצה עליו מעלה event למעלה (למשל: openPatientWorkspace). אם לא מסופק —
-// הכרטיס מוצג כ-div "רגיל" בדיוק כמו לפני, לתאימות אחורה עם שימושים קיימים.
-export default function PatientCard({ patient, onSelect }) {
+export default function PatientCard({ patient, onSelect, onDelete }) {
   const { displayCode, ageRange, treatmentArea, lastSessionDate, documentsCount, representativeStatus } = patient
 
   const body = (
@@ -18,6 +11,16 @@ export default function PatientCard({ patient, onSelect }) {
         <span className="rounded-lg bg-brand-50 px-2.5 py-1 text-sm font-bold text-brand-700">
           {displayCode}
         </span>
+        {onDelete && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onDelete() }}
+            aria-label={`מחיקת מטופל ${displayCode}`}
+            className="rounded p-1 text-slate-300 transition-colors hover:bg-red-50 hover:text-red-500 focus:outline-none focus:ring-2 focus:ring-red-400"
+          >
+            <Trash2 className="h-4 w-4" aria-hidden="true" />
+          </button>
+        )}
       </div>
 
       <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-600">
