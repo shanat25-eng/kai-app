@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Pencil, Check, X, TriangleAlert } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { updatePatient } from '../../api/patients'
-import { getLocalPatientName, setLocalPatientName } from '../../utils/localPatientName'
+import { getLocalPatientDetails, setLocalPatientDetails, FRAMEWORK_OPTIONS } from '../../utils/localPatientName'
 import {
   AGE_RANGE_OPTIONS,
   TREATMENT_AREA_OPTIONS,
@@ -347,28 +347,66 @@ export default function PatientWorkspaceHeader({ patient, onPatientUpdate }) {
 }
 
 function LocalNameField({ displayCode }) {
-  const [value, setValue] = useState(() => getLocalPatientName(displayCode))
+  const [details, setDetails] = useState(() => getLocalPatientDetails(displayCode))
 
-  function handleChange(e) {
-    const v = e.target.value
-    setValue(v)
-    setLocalPatientName(displayCode, v)
+  function update(field, value) {
+    const next = { ...details, [field]: value }
+    setDetails(next)
+    setLocalPatientDetails(displayCode, next)
   }
+
+  const inputCls = 'w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-800 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-400'
+  const labelCls = 'mb-1 block text-xs font-medium text-slate-500'
 
   return (
     <div className="mt-3 border-t border-slate-100 pt-3">
-      <label htmlFor={`localname-${displayCode}`} className="mb-1 block text-xs font-medium text-slate-500">
-        שם להופעה במסמכים
-      </label>
-      <input
-        id={`localname-${displayCode}`}
-        type="text"
-        value={value}
-        onChange={handleChange}
-        placeholder="שם המטופל/ת (רשות)"
-        className="w-full max-w-xs rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-800 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-400"
-      />
-      <p className="mt-1 text-xs text-slate-400">לא נשמר בשרת, רק במכשיר זה</p>
+      <p className="mb-3 text-xs font-semibold text-slate-500">פרטים למסמכים</p>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div>
+          <label className={labelCls}>שם להופעה במסמכים</label>
+          <input type="text" value={details.name} onChange={(e) => update('name', e.target.value)}
+            placeholder="שם המטופל/ת (רשות)" className={inputCls} />
+        </div>
+
+        <div>
+          <label className={labelCls}>סוג מסגרת</label>
+          <select value={details.frameworkType} onChange={(e) => update('frameworkType', e.target.value)}
+            className={inputCls}>
+            {FRAMEWORK_OPTIONS.map((o) => (
+              <option key={o} value={o}>{o || '— לא נבחר —'}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className={labelCls}>בדיקת שמיעה — תאריך</label>
+          <input type="text" value={details.hearingTestDate} onChange={(e) => update('hearingTestDate', e.target.value)}
+            placeholder="למשל: 03/2025" className={inputCls} />
+        </div>
+
+        <div>
+          <label className={labelCls}>בדיקת שמיעה — תוצאה</label>
+          <input type="text" value={details.hearingTestResult} onChange={(e) => update('hearingTestResult', e.target.value)}
+            placeholder="למשל: תקין / ירידה קלה בתדרים גבוהים" className={inputCls} />
+        </div>
+
+        <div className="sm:col-span-2">
+          <label className={labelCls}>אבחונים נוספים</label>
+          <textarea value={details.additionalDiagnoses} onChange={(e) => update('additionalDiagnoses', e.target.value)}
+            placeholder="למשל: ADHD, ASD, עיכוב שפה..." rows={2}
+            className={`${inputCls} resize-none`} />
+        </div>
+
+        <div className="sm:col-span-2">
+          <label className={labelCls}>המלצות למסגרת</label>
+          <textarea value={details.frameworkRecommendations} onChange={(e) => update('frameworkRecommendations', e.target.value)}
+            placeholder="למשל: המלצה לשילוב עם ליווי צמוד..." rows={2}
+            className={`${inputCls} resize-none`} />
+        </div>
+      </div>
+
+      <p className="mt-2 text-xs text-slate-400">נשמר רק במכשיר זה, לא נשמר בשרת</p>
     </div>
   )
 }

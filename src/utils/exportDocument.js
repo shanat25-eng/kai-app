@@ -9,7 +9,9 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;')
 }
 
-function buildPrintableHtml({ doc, patient, clinicianName, licenseNumber, localPatientName }) {
+function buildPrintableHtml({ doc, patient, clinicianName, licenseNumber, localPatientName, localDetails }) {
+  const d = localDetails ?? {}
+  const name = localPatientName || d.name || ''
   const title = DOCUMENT_TYPE_CONFIG[doc.documentType]?.label ?? 'מסמך קליני'
   const approvedDate = doc.approvedAt ? formatDate(doc.approvedAt) : formatDate(doc.createdAt)
   const sectionsHtml = (doc.sections ?? [])
@@ -118,17 +120,21 @@ function buildPrintableHtml({ doc, patient, clinicianName, licenseNumber, localP
       <h1>${escapeHtml(title)}</h1>
       <table class="meta">
         <tr>
-          <td><strong>שם המטופל/ת:</strong> ${localPatientName ? escapeHtml(localPatientName) : '_______________________'}</td>
+          <td><strong>שם המטופל/ת:</strong> ${name ? escapeHtml(name) : '_______________________'}</td>
           <td><strong>ת.ז.:</strong> ___________________</td>
-        </tr>
-        <tr>
-          <td><strong>תאריך לידה / גיל:</strong> _______________</td>
-          <td><strong>מסגרת חינוכית:</strong> _______________</td>
         </tr>
         <tr>
           <td><strong>קבוצת גיל:</strong> ${escapeHtml(patient?.ageRange ?? '—')}</td>
           <td><strong>תחום טיפול:</strong> ${escapeHtml(patient?.treatmentArea ?? '—')}</td>
         </tr>
+        <tr>
+          <td><strong>סוג מסגרת:</strong> ${d.frameworkType ? escapeHtml(d.frameworkType) : '_______________'}</td>
+          <td><strong>בדיקת שמיעה:</strong> ${d.hearingTestDate || d.hearingTestResult
+            ? `${escapeHtml(d.hearingTestDate ?? '')} ${escapeHtml(d.hearingTestResult ?? '')}`.trim()
+            : '_______________'}</td>
+        </tr>
+        ${d.additionalDiagnoses ? `<tr><td colspan="2"><strong>אבחונים נוספים:</strong> ${escapeHtml(d.additionalDiagnoses)}</td></tr>` : ''}
+        ${d.frameworkRecommendations ? `<tr><td colspan="2"><strong>המלצות למסגרת:</strong> ${escapeHtml(d.frameworkRecommendations)}</td></tr>` : ''}
       </table>
     </div>
     ${sectionsHtml}
@@ -145,8 +151,8 @@ function buildPrintableHtml({ doc, patient, clinicianName, licenseNumber, localP
 </html>`
 }
 
-export function downloadDocumentAsWord({ doc, patient, clinicianName, licenseNumber, localPatientName }) {
-  const html = buildPrintableHtml({ doc, patient, clinicianName, licenseNumber, localPatientName })
+export function downloadDocumentAsWord({ doc, patient, clinicianName, licenseNumber, localPatientName, localDetails }) {
+  const html = buildPrintableHtml({ doc, patient, clinicianName, licenseNumber, localPatientName, localDetails })
   const wordHtml = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40" dir="rtl" lang="he">${html.slice(html.indexOf('<head>'))}`
   const blob = new Blob(['\ufeff', wordHtml], { type: 'application/msword;charset=utf-8' })
   const url = URL.createObjectURL(blob)
@@ -159,8 +165,8 @@ export function downloadDocumentAsWord({ doc, patient, clinicianName, licenseNum
   URL.revokeObjectURL(url)
 }
 
-export function printDocumentAsPdf({ doc, patient, clinicianName, licenseNumber, localPatientName }) {
-  const html = buildPrintableHtml({ doc, patient, clinicianName, licenseNumber, localPatientName })
+export function printDocumentAsPdf({ doc, patient, clinicianName, licenseNumber, localPatientName, localDetails }) {
+  const html = buildPrintableHtml({ doc, patient, clinicianName, licenseNumber, localPatientName, localDetails })
   const win = window.open('', '_blank', 'width=820,height=950')
   if (!win) {
     throw new Error('הדפדפן חסם חלון קופץ — אפשרי חלונות קופצים או הורידי ל-Word')

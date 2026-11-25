@@ -35,7 +35,7 @@ import { findIdentifyingInfo } from '../utils/privacyGuard'
 import { diffAuthorship } from '../utils/textDiff'
 import { formatDate } from '../utils/formatDate'
 import { downloadDocumentAsWord, printDocumentAsPdf } from '../utils/exportDocument'
-import { getLocalPatientName } from '../utils/localPatientName'
+import { getLocalPatientName, getLocalPatientDetails } from '../utils/localPatientName'
 
 // מסך עריכה + אישור סופי למסמך — שלב 6.
 //
@@ -356,6 +356,7 @@ export default function DocumentEditScreen() {
       clinicianName: clinician?.displayName || '',
       licenseNumber: clinician?.licenseNumber || '',
       localPatientName: getLocalPatientName(patient?.displayCode),
+      localDetails: getLocalPatientDetails(patient?.displayCode),
     })
     await logDocumentExport(currentDocument.id, clinician.id)
     setNotice('קובץ Word הורד בהצלחה')
@@ -370,6 +371,7 @@ export default function DocumentEditScreen() {
         clinicianName: clinician?.displayName || '',
         licenseNumber: clinician?.licenseNumber || '',
         localPatientName: getLocalPatientName(patient?.displayCode),
+        localDetails: getLocalPatientDetails(patient?.displayCode),
       })
       await logDocumentExport(currentDocument.id, clinician.id)
     } catch (err) {
