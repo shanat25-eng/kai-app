@@ -1,3 +1,4 @@
+import { requireAuthenticatedUser } from './_auth.js'
 const SUGGESTION_COUNT = 3
 const MAX_TEXT_LENGTH = 4000
 
@@ -38,6 +39,9 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
+
+  const authUser = await requireAuthenticatedUser(req, res)
+  if (!authUser) return
 
   let body
   try {
