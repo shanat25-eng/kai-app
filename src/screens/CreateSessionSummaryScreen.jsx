@@ -210,14 +210,20 @@ export default function CreateSessionSummaryScreen() {
         // עוצרים את כל ה-tracks כדי לכבות את חיווי "המיקרופון פעיל" בדפדפן.
         stream.getTracks().forEach((track) => track.stop())
 
-        const audioBlob = new Blob(audioChunksRef.current, {
-          type: mediaRecorder.mimeType || 'audio/webm',
-        })
-
-        await transcribeAndAppend(target, audioBlob, 'recording.webm')
+        const mime = mediaRecorder.mimeType || 'audio/webm'
+        const audioBlob = new Blob(audioChunksRef.current, { type: mime })
+        if (audioBlob.size === 0) {
+          setRecordError({
+            target,
+            message: 'לא נקלט קול מהמיקרופון. בדקי שהמיקרופון מחובר ולא מושתק.',
+          })
+          return
+        }
+        const ext = mime.includes('mp4') ? 'm4a' : mime.includes('ogg') ? 'ogg' : 'webm'
+        await transcribeAndAppend(target, audioBlob, `recording.${ext}`)
       }
 
-      mediaRecorder.start()
+      mediaRecorder.start(250)
       mediaRecorderRef.current = mediaRecorder
       setRecordingTarget(target)
     } catch (err) {
