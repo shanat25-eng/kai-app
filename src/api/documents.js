@@ -89,6 +89,16 @@ function toApp(row) {
 // ---------------------------------------------------------------------------
 
 /** @returns {Promise<import('../types/entities').Document[]>} */
+export async function listAllDocuments() {
+  const { data, error } = await supabase
+    .from('documents')
+    .select('*')
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return data.map(toApp)
+}
+
+/** @returns {Promise<import('../types/entities').Document[]>} */
 export async function listDocumentsByPatient(patientId) {
   const { data, error } = await supabase
     .from('documents')
@@ -156,9 +166,16 @@ export async function updateDocumentContent(id, finalText, clinicianId) {
   const nextStatus =
     current.status === DOCUMENT_STATUS.GENERATED ? DOCUMENT_STATUS.REVIEWED : current.status
 
+  const dbPatch = { final_text: finalText, status: nextStatus }
+  if (typeof aiText === 'string') {
+    dbPatch.generated_text = sections
+      .map((s) => `${s.label}\n${'-'.repeat(Math.max(s.label.length, 3))}\n${s.aiText ?? ''}`)
+      .join('\n\n')
+  }
+
   const { data: row, error } = await supabase
     .from('documents')
-    .update({ final_text: finalText, status: nextStatus })
+    .update(dbPatch)
     .eq('id', id)
     .select()
     .single()
