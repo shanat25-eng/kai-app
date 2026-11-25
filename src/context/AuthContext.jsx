@@ -32,10 +32,27 @@ export function AuthProvider({ children }) {
   const clinician = session
     ? {
         id: session.user.id,
+        email: session.user.email,
         fullName: session.user.user_metadata?.full_name ?? session.user.email,
+        displayName: session.user.user_metadata?.full_name ?? '',
+        licenseNumber: session.user.user_metadata?.license_number ?? '',
+        privacyAcceptedAt: session.user.user_metadata?.privacy_accepted_at ?? null,
         role: 'קלינאית תקשורת',
       }
     : null
+
+  async function updateProfile({ fullName, licenseNumber, privacyAcceptedAt }) {
+    const data = {}
+    if (fullName !== undefined) data.full_name = fullName.trim()
+    if (licenseNumber !== undefined) data.license_number = licenseNumber.trim()
+    if (privacyAcceptedAt !== undefined) data.privacy_accepted_at = privacyAcceptedAt
+    const { data: res, error: updErr } = await supabase.auth.updateUser({ data })
+    if (updErr) throw updErr
+    if (res?.user) {
+      setSession((prev) => (prev ? { ...prev, user: res.user } : prev))
+    }
+    return res?.user
+  }
 
   async function login(email, password) {
     setError(null)
@@ -89,7 +106,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ isAuthenticated, clinician, login, logout, error, idleSecondsLeft, stayActive }}
+      value={{ isAuthenticated, clinician, login, logout, updateProfile, error, idleSecondsLeft, stayActive }}
     >
       {children}
     </AuthContext.Provider>
