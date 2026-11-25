@@ -951,14 +951,16 @@ function ExportBar({ locked, onCopy, onDownloadWord, onPrintPdf }) {
 
 function BackLink({ onClick, label }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex items-center gap-1 text-sm text-slate-500 transition-colors hover:text-slate-800"
-    >
-      <ArrowRight className="h-4 w-4" aria-hidden="true" />
-      {label}
-    </button>
+    <div className="sticky top-0 z-10 -mx-4 bg-white px-4 pb-3 pt-2 shadow-sm">
+      <button
+        type="button"
+        onClick={onClick}
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-3 text-base font-semibold text-white shadow transition-colors hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 sm:w-auto sm:justify-start"
+      >
+        <ArrowRight className="h-5 w-5" aria-hidden="true" />
+        {label}
+      </button>
+    </div>
   )
 }
 
