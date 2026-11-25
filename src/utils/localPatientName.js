@@ -5,7 +5,7 @@
 const PREFIX = 'kai:localdetails:'
 const LEGACY_PREFIX = 'kai:localname:'
 
-export const FRAMEWORK_OPTIONS = ['', 'רגיל', 'שילוב', 'חינוך מיוחד', 'חינוכי']
+export const FRAMEWORK_OPTIONS = ['', 'רגיל', 'שילוב', 'חינוך מיוחד']
 
 export function getLocalPatientDetails(displayCode) {
   if (!displayCode) return _empty()

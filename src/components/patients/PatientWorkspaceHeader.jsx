@@ -1,7 +1,8 @@
-import { useState } from 'react'
-import { Pencil, Check, X, TriangleAlert } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { Pencil, Check, X, TriangleAlert, Mic, MicOff, FileDown } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { updatePatient } from '../../api/patients'
+import { supabase } from '../../api/supabaseClient'
 import { getLocalPatientDetails, setLocalPatientDetails, FRAMEWORK_OPTIONS } from '../../utils/localPatientName'
 import {
   AGE_RANGE_OPTIONS,
@@ -341,14 +342,19 @@ export default function PatientWorkspaceHeader({ patient, onPatientUpdate }) {
         )}
       </div>
 
-      <LocalNameField displayCode={displayCode} />
+      <LocalNameField displayCode={displayCode} patient={patient} clinician={clinician} />
     </header>
   )
 }
 
-function LocalNameField({ displayCode }) {
+function LocalNameField({ displayCode, patient, clinician }) {
   const [details, setDetails] = useState(() => getLocalPatientDetails(displayCode))
   const [savedAt, setSavedAt] = useState(null)
+  const [isRecording, setIsRecording] = useState(false)
+  const [isTranscribing, setIsTranscribing] = useState(false)
+  const mediaRecorderRef = useRef(null)
+  const chunksRef = useRef([])
+  const streamRef = useRef(null)
 
   function update(field, value) {
     const next = { ...details, [field]: value }
@@ -359,6 +365,171 @@ function LocalNameField({ displayCode }) {
   function handleSave() {
     setLocalPatientDetails(displayCode, details)
     setSavedAt(new Date())
+  }
+
+  async function transcribeAudio(blob) {
+    const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
+    const url = `${BASE_URL}/transcribe`
+    const formData = new FormData()
+    formData.append('audio', blob, 'recording.webm')
+
+    async function doPost(token) {
+      const headers = token ? { Authorization: `Bearer ${token}` } : {}
+      return fetch(url, { method: 'POST', headers, body: formData })
+    }
+
+    try {
+      const { data: sessionData } = await supabase.auth.getSession()
+      let token = sessionData?.session?.access_token
+      let response = await doPost(token)
+
+      if (response.status === 401) {
+        const { data: refreshed } = await supabase.auth.refreshSession()
+        token = refreshed?.session?.access_token
+        response = await doPost(token)
+      }
+
+      if (!response.ok) return null
+      const json = await response.json()
+      return json.text || json.transcription || null
+    } catch {
+      return null
+    }
+  }
+
+  async function handleMicToggle() {
+    if (isRecording) {
+      mediaRecorderRef.current?.stop()
+      streamRef.current?.getTracks().forEach((t) => t.stop())
+      return
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      streamRef.current = stream
+      chunksRef.current = []
+
+      const recorder = new MediaRecorder(stream)
+      mediaRecorderRef.current = recorder
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data)
+      }
+
+      recorder.onstop = async () => {
+        setIsRecording(false)
+        const blob = new Blob(chunksRef.current, { type: 'audio/webm' })
+        setIsTranscribing(true)
+        const text = await transcribeAudio(blob)
+        setIsTranscribing(false)
+        if (text) {
+          setDetails((prev) => {
+            const next = {
+              ...prev,
+              additionalDiagnoses: prev.additionalDiagnoses
+                ? prev.additionalDiagnoses + '\n' + text
+                : text,
+            }
+            setLocalPatientDetails(displayCode, next)
+            return next
+          })
+        }
+      }
+
+      recorder.start()
+      setIsRecording(true)
+    } catch {
+      // permission denied or not supported — fail silently
+    }
+  }
+
+  function buildExportHtml(forWord) {
+    const now = new Date()
+    const dateStr = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`
+    const wordNs = forWord
+      ? `xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'`
+      : ''
+
+    const fields = [
+      ['שם מטופל/ת', details.name],
+      ['ת.ז', details.idNumber],
+      ['תאריך לידה', details.birthDate],
+      ['קופת חולים', details.healthFund],
+      ['כתובת', details.address],
+      ['שמות הורים', details.parentNames],
+      ['גורם שהמליץ', details.referralSource],
+      ['קבוצת גיל', patient?.ageRange],
+      ['תחום טיפול', patient?.treatmentArea],
+      ['סוג מסגרת', details.frameworkType],
+      ['בדיקת שמיעה — תאריך', details.hearingTestDate],
+      ['בדיקת שמיעה — תוצאה', details.hearingTestResult],
+      ['אבחונים נוספים', details.additionalDiagnoses],
+      ['המלצות למסגרת', details.frameworkRecommendations],
+    ]
+
+    const rows = fields
+      .filter(([, v]) => v)
+      .map(([label, value]) => `<tr><td class="lbl">${label}</td><td>${value.replace(/\n/g, '<br>')}</td></tr>`)
+      .join('')
+
+    const clinicianName = clinician?.full_name || ''
+    const licenseNumber = clinician?.license_number || ''
+
+    return `<!DOCTYPE html>
+<html ${wordNs}>
+<head>
+<meta charset="UTF-8">
+<style>
+  body { direction: rtl; font-family: Arial, sans-serif; font-size: 12pt; color: #111; }
+  h1 { font-size: 16pt; border-bottom: 2px solid #333; padding-bottom: 6pt; margin-bottom: 12pt; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 16pt; }
+  td { padding: 5pt 8pt; vertical-align: top; border: 1px solid #ccc; }
+  td.lbl { font-weight: bold; width: 30%; background: #f5f5f5; white-space: nowrap; }
+  .sig-table td { border: none; }
+  .sig-line { border-bottom: 1px solid #333; min-width: 120pt; display: inline-block; }
+  .footer { margin-top: 24pt; border-top: 1px solid #ccc; padding-top: 6pt; font-size: 9pt; color: #888; text-align: center; }
+</style>
+</head>
+<body dir="rtl">
+<h1>פרטי מטופל — ${displayCode}</h1>
+<table>${rows}</table>
+<table class="sig-table">
+  <tr>
+    <td style="width:50%">
+      <div>שם הבודקת: ${clinicianName}</div>
+      <div>קלינאית תקשורת</div>
+      ${licenseNumber ? `<div>מ.ר. ${licenseNumber}</div>` : ''}
+    </td>
+    <td style="width:50%">
+      <div>תאריך: ${dateStr}</div>
+      <div>&nbsp;</div>
+      <div>חתימה וחותמת: <span class="sig-line">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></div>
+    </td>
+  </tr>
+</table>
+<div class="footer">הופק באמצעות K.ai &nbsp;|&nbsp; &copy; 2026 K.ai &nbsp;|&nbsp; פיילוט — לשימוש בדיקה בלבד</div>
+</body>
+</html>`
+  }
+
+  function handleExportWord() {
+    const html = buildExportHtml(true)
+    const blob = new Blob(['﻿', html], { type: 'application/msword' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `פרטי_מטופל_${displayCode}.doc`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  function handleExportPdf() {
+    const html = buildExportHtml(false)
+    const win = window.open('', '_blank', 'width=800,height=900')
+    if (!win) return
+    win.document.write(html)
+    win.document.close()
+    win.onload = () => { win.focus(); win.print() }
   }
 
   const inputCls = 'w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-800 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-400'
@@ -401,9 +572,9 @@ function LocalNameField({ displayCode }) {
             placeholder="שמות ההורים" className={inputCls} />
         </div>
         <div className="sm:col-span-2">
-          <label className={labelCls}>גורם מפנה</label>
+          <label className={labelCls}>גורם שהמליץ</label>
           <input type="text" value={details.referralSource} onChange={(e) => update('referralSource', e.target.value)}
-            placeholder="שם ד״ר / מוסד / הורים" className={inputCls} />
+            placeholder="שם ד״ר / מסגרת חינוכית / הורים" className={inputCls} />
         </div>
       </div>
 
@@ -429,9 +600,32 @@ function LocalNameField({ displayCode }) {
             placeholder="למשל: תקין / ירידה קלה בתדרים גבוהים" className={inputCls} />
         </div>
         <div className="sm:col-span-2">
-          <label className={labelCls}>אבחונים נוספים</label>
+          <div className="mb-1 flex items-center justify-between">
+            <label className={labelCls} style={{ marginBottom: 0 }}>אבחונים נוספים</label>
+            <button
+              type="button"
+              onClick={handleMicToggle}
+              disabled={isTranscribing}
+              aria-label={isRecording ? 'עצור הקלטה' : 'הקלט ותמלל'}
+              className={`flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium transition-colors ${
+                isRecording
+                  ? 'bg-red-100 text-red-600 hover:bg-red-200'
+                  : isTranscribing
+                  ? 'cursor-not-allowed bg-slate-100 text-slate-400'
+                  : 'bg-brand-50 text-brand-600 hover:bg-brand-100'
+              }`}
+            >
+              {isRecording ? (
+                <><MicOff className="h-3.5 w-3.5" aria-hidden="true" /> עצור</>
+              ) : isTranscribing ? (
+                <><Mic className="h-3.5 w-3.5 animate-pulse" aria-hidden="true" /> מתמלל...</>
+              ) : (
+                <><Mic className="h-3.5 w-3.5" aria-hidden="true" /> הקלטה</>
+              )}
+            </button>
+          </div>
           <textarea value={details.additionalDiagnoses} onChange={(e) => update('additionalDiagnoses', e.target.value)}
-            placeholder="למשל: ADHD, ASD, עיכוב שפה..." rows={2}
+            placeholder="למשל: ADHD, ASD, עיכוב שפה..." rows={3}
             className={`${inputCls} resize-none`} />
         </div>
         <div className="sm:col-span-2">
@@ -442,7 +636,7 @@ function LocalNameField({ displayCode }) {
         </div>
       </div>
 
-      <div className="mt-4 flex items-center gap-3">
+      <div className="mt-4 flex flex-wrap items-center gap-3">
         <button
           type="button"
           onClick={handleSave}
@@ -455,6 +649,24 @@ function LocalNameField({ displayCode }) {
             נשמר ✓ {savedAt.getHours().toString().padStart(2, '0')}:{savedAt.getMinutes().toString().padStart(2, '0')}
           </span>
         )}
+        <div className="mr-auto flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleExportWord}
+            className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+          >
+            <FileDown className="h-4 w-4" aria-hidden="true" />
+            Word
+          </button>
+          <button
+            type="button"
+            onClick={handleExportPdf}
+            className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+          >
+            <FileDown className="h-4 w-4" aria-hidden="true" />
+            PDF
+          </button>
+        </div>
       </div>
       <p className="mt-2 text-xs text-slate-400">נשמר רק במכשיר זה, לא נשמר בשרת</p>
     </div>
