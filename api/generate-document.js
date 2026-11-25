@@ -2,39 +2,38 @@ import { validateTranscript } from '../server/validation.js'
 
 const DOC_TEMPLATES = {
   initial_assessment: {
-    title: 'אבחון ראשוני',
-    role: 'הכן טיוטת דוח אבחון ראשוני מקצועית בקלינאות תקשורת בעברית (ילדים/נוער) על בסיס תיאור המפגש בלבד.',
+    title: 'אבחון ראשוני — שפה ודיבור',
+    role: 'הכן טיוטת דוח אבחון ראשוני מקצועית בקלינאות תקשורת בישראל (סגנון מכון להתפתחות הילד / קופת חולים) על בסיס תיאור הקלינאית בלבד.',
     sections: [
-      { key: 'referralAndBackground', label: 'סיבת הפניה ורקע' },
-      { key: 'generalImpression', label: 'התרשמות כללית (תקשורת, משחק ושיתוף פעולה)' },
-      { key: 'languageFindings', label: 'ממצאי אבחון — שפה (הבנה והבעה)' },
-      { key: 'speechAndOralFindings', label: 'ממצאי אבחון — היגוי, דיבור ותפקודי פה' },
+      { key: 'backgroundAndReferral', label: 'רקע כללי וסיבת ההפניה' },
+      { key: 'generalImpression', label: 'התרשמות כללית ושיתוף פעולה במפגש' },
+      { key: 'languageFindings', label: 'ממצאי אבחון — הבנה והבעת שפה' },
+      { key: 'speechAndOralFindings', label: 'ממצאי אבחון — מובנות דיבור, היגוי ותפקודי פה' },
       { key: 'clinicalSummary', label: 'סיכום קליני' },
       { key: 'recommendationsAndGoals', label: 'המלצות ומטרות ראשוניות לטיפול' },
     ],
   },
   series_summary: {
-    title: 'סיכום סדרת טיפולים',
-    role: 'הכן טיוטת דוח סיכום סדרת טיפולים מקצועית בקלינאות תקשורת בעברית על בסיס סיכומי המפגשים, האבחון והערות הקלינאית שצורפו בלבד.',
+    title: 'דוח סיכום טיפול שפה ודיבור',
+    role: 'הכן טיוטת דוח סיכום סדרת טיפולים מקצועית בקלינאות תקשורת בישראל (סגנון קופת חולים / התפתחות הילד) על בסיס סיכומי המפגשים, האבחון והערות הקלינאית שצורפו בלבד.',
     sections: [
-      { key: 'seriesOverview', label: 'רקע ומסגרת סדרת הטיפולים' },
-      { key: 'initialStatus', label: 'מצב בתחילת הסדרה' },
-      { key: 'interventions', label: 'מטרות ותחומי עבודה במהלך הסדרה' },
-      { key: 'progressAndResponse', label: 'התקדמות ותגובת המטופל/ת' },
-      { key: 'currentStatus', label: 'מצב תפקודי נוכחי' },
-      { key: 'recommendations', label: 'המלצות להמשך' },
+      { key: 'backgroundAndReferral', label: 'רקע כללי וסיבת ההפניה לטיפול' },
+      { key: 'cooperationAndParents', label: 'שיתוף הפעולה ומעורבות ההורים' },
+      { key: 'treatmentGoals', label: 'מטרות הטיפול שנקבעו לסדרה' },
+      { key: 'courseAndProgress', label: 'מהלך הטיפול ומידת ההתקדמות במטרות' },
+      { key: 'summaryAndRecommendations', label: 'סיכום והמלצות' },
     ],
   },
   continuation_request: {
-    title: 'בקשה להמשך טיפול',
-    role: 'הכן טיוטת מכתב/בקשה מקצועית להמשך טיפול בקלינאות תקשורת בעברית (לקופת חולים / ועדה / גורם מאשר) על בסיס התיעוד הקליני שצורף בלבד. הדגש באופן מקצועי ועובדתי את ההתקדמות שהושגה, הפערים שעדיין קיימים, והצורך הקליני בהמשך טיפול.',
+    title: 'בקשת המשך טיפול שפה ודיבור',
+    role: 'הכן טיוטת בקשה מקצועית ומנומקת להמשך טיפול בקלינאות תקשורת בישראל (לקופת חולים / ועדה / מכון להתפתחות הילד) על בסיס התיעוד הקליני שצורף בלבד.',
     sections: [
-      { key: 'requestOverview', label: 'פרטי הבקשה ורקע טיפולי' },
-      { key: 'clinicalProgress', label: 'התקדמות שהושגה עד כה' },
-      { key: 'remainingGaps', label: 'פערים וצרכים שטרם הושגו' },
-      { key: 'clinicalJustification', label: 'נימוק קליני להמשך טיפול' },
-      { key: 'proposedGoals', label: 'מטרות טיפוליות לתקופה המבוקשת' },
-      { key: 'requestedScope', label: 'היקף הטיפול המבוקש' },
+      { key: 'backgroundAndReferral', label: 'רקע וסיבת הפניה' },
+      { key: 'cooperationAndParents', label: 'התנהגות בזמן הטיפול ושיתוף פעולה של ההורים' },
+      { key: 'treatmentGoals', label: 'מטרות הטיפול שנקבעו' },
+      { key: 'progressDescription', label: 'תיאור ההתקדמות במטרות הטיפול' },
+      { key: 'remainingGapsAndJustification', label: 'פערים שנותרו ונימוק קליני להמשך טיפול' },
+      { key: 'recommendationsAndScope', label: 'המלצות והיקף הטיפול המבוקש' },
     ],
   },
 }
@@ -47,10 +46,10 @@ function buildSystemPrompt(template) {
 ${template.role}
 
 כללי ברזל:
-1. כתוב אך ורק על בסיס המידע שסופק. אל תמציא ציונים, בדיקות, אבחנות, תאריכים, גילאים או עובדות שלא נכתבו במפורש.
+1. כתוב אך ורק על בסיס המידע שסופק. אל תמציא אבחנות, בדיקות, ציונים, גילאים, תאריכים או עובדות שלא נכתבו במפורש.
 2. אם חסר מידע לסעיף מסוים — כתוב בדיוק: "${MISSING_FALLBACK}".
-3. שפה קלינית עברית מקצועית, ברורה, תמציתית ותקנית. בלי אימוג'ים, בלי כוכביות, בלי כותרות מיותרות בתוך ערך הסעיף.
-4. שמור על פרטיות: אל תוסיף שמות אמיתיים או מזהים.
+3. שפה קלינית עברית מקצועית, עשירה, ברורה ותקנית (בסגנון דוחות התפתחות הילד בישראל). בלי אימוג'ים, בלי כוכביות, בלי חזרה על כותרת הסעיף בתוך התוכן.
+4. שמור על פרטיות: אל תוסיף שמות אמיתיים או מזהים; התייחס כ"המטופל/ת" או לפי הקוד אם הוזכר.
 
 החזר JSON תקין בלבד עם המפתח "sections" הכולל בדיוק את המפתחות הבאים (מחרוזת לכל מפתח):
 ${keysSpec}`
@@ -120,9 +119,10 @@ export default async function handler(req, res) {
 
     const secObj = parsed?.sections && typeof parsed.sections === 'object' ? parsed.sections : parsed
     const sections = template.sections.map((s) => {
-      const val = typeof secObj?.[s.key] === 'string' && secObj[s.key].trim()
-        ? secObj[s.key].trim()
-        : MISSING_FALLBACK
+      const val =
+        typeof secObj?.[s.key] === 'string' && secObj[s.key].trim()
+          ? secObj[s.key].trim()
+          : MISSING_FALLBACK
       return {
         key: s.key,
         label: s.label,
