@@ -9,7 +9,7 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;')
 }
 
-function buildPrintableHtml({ doc, patient, clinicianName }) {
+function buildPrintableHtml({ doc, patient, clinicianName, licenseNumber }) {
   const title = DOCUMENT_TYPE_CONFIG[doc.documentType]?.label ?? 'מסמך קליני'
   const approvedDate = doc.approvedAt ? formatDate(doc.approvedAt) : formatDate(doc.createdAt)
   const sectionsHtml = (doc.sections ?? [])
@@ -135,7 +135,7 @@ function buildPrintableHtml({ doc, patient, clinicianName }) {
     <div class="signature">
       <div>בברכה,</div>
       <div><strong>${clinicianName ? escapeHtml(clinicianName) : '_______________________'}</strong></div>
-      <div>קלינאית תקשורת | מ.ר. ____________</div>
+      <div>קלינאית תקשורת | מ.ר. ${licenseNumber ? escapeHtml(licenseNumber) : '____________'}</div>
     </div>
     <div class="footer-note">
       קוד מערכת: ${escapeHtml(patient?.displayCode ?? '—')} · גרסה ${escapeHtml(doc.version)} · אושר ב-${escapeHtml(approvedDate)}
@@ -145,8 +145,8 @@ function buildPrintableHtml({ doc, patient, clinicianName }) {
 </html>`
 }
 
-export function downloadDocumentAsWord({ doc, patient, clinicianName }) {
-  const html = buildPrintableHtml({ doc, patient, clinicianName })
+export function downloadDocumentAsWord({ doc, patient, clinicianName, licenseNumber }) {
+  const html = buildPrintableHtml({ doc, patient, clinicianName, licenseNumber })
   const wordHtml = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40" dir="rtl" lang="he">${html.slice(html.indexOf('<head>'))}`
   const blob = new Blob(['\ufeff', wordHtml], { type: 'application/msword;charset=utf-8' })
   const url = URL.createObjectURL(blob)
@@ -159,8 +159,8 @@ export function downloadDocumentAsWord({ doc, patient, clinicianName }) {
   URL.revokeObjectURL(url)
 }
 
-export function printDocumentAsPdf({ doc, patient, clinicianName }) {
-  const html = buildPrintableHtml({ doc, patient, clinicianName })
+export function printDocumentAsPdf({ doc, patient, clinicianName, licenseNumber }) {
+  const html = buildPrintableHtml({ doc, patient, clinicianName, licenseNumber })
   const win = window.open('', '_blank', 'width=820,height=950')
   if (!win) {
     throw new Error('הדפדפן חסם חלון קופץ — אפשרי חלונות קופצים או הורידי ל-Word')
