@@ -1,3 +1,4 @@
+import { requireAuthenticatedUser } from './_auth.js'
 import { validateTranscript } from '../server/validation.js'
 
 const DOC_TEMPLATES = {
@@ -59,6 +60,9 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
+
+  const authUser = await requireAuthenticatedUser(req, res)
+  if (!authUser) return
 
   const { documentType, sourceText, patientContext } = req.body ?? {}
   const template = DOC_TEMPLATES[documentType]
