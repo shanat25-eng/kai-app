@@ -11,33 +11,53 @@ async function getAuthHeaders() {
 }
 
 export async function apiRequest(path, options = {}) {
+  const url = `${BASE_URL}${path}`
   const authHeaders = await getAuthHeaders()
-  const response = await fetch(`${BASE_URL}${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...authHeaders,
-      ...options.headers,
-    },
-  })
+  let response
+  try {
+    response = await fetch(url, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders,
+        ...options.headers,
+      },
+    })
+  } catch (networkErr) {
+    console.error(`kai: network error → ${url}`, networkErr)
+    throw new Error(`שגיאת רשת (${networkErr.message}) — השרת לא זמין. בדקי חיבור אינטרנט.`)
+  }
 
   if (!response.ok) {
-    throw new Error(`API error ${response.status}: ${response.statusText}`)
+    let body = ''
+    try { body = await response.text() } catch {}
+    console.error(`kai: API ${response.status} → ${url}`, body)
+    throw new Error(`שגיאת שרת ${response.status} (${url}): ${body || response.statusText}`)
   }
 
   return response.json()
 }
 
 export async function apiUpload(path, formData) {
+  const url = `${BASE_URL}${path}`
   const authHeaders = await getAuthHeaders()
-  const response = await fetch(`${BASE_URL}${path}`, {
-    method: 'POST',
-    headers: authHeaders,
-    body: formData,
-  })
+  let response
+  try {
+    response = await fetch(url, {
+      method: 'POST',
+      headers: authHeaders,
+      body: formData,
+    })
+  } catch (networkErr) {
+    console.error(`kai: network error → ${url}`, networkErr)
+    throw new Error(`שגיאת רשת (${networkErr.message}) — השרת לא זמין.`)
+  }
 
   if (!response.ok) {
-    throw new Error(`API error ${response.status}: ${response.statusText}`)
+    let body = ''
+    try { body = await response.text() } catch {}
+    console.error(`kai: API ${response.status} → ${url}`, body)
+    throw new Error(`שגיאת שרת ${response.status}: ${body || response.statusText}`)
   }
 
   return response.json()

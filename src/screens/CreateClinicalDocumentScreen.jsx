@@ -209,8 +209,8 @@ export default function CreateClinicalDocumentScreen() {
       setDraft(result)
       setStep('draft')
     } catch (err) {
-      console.error('kai: generateClinicalDocument failed', err)
-      setFormError('שגיאה ביצירת הטיוטה. נסי שוב.')
+      console.error('kai: generateClinicalDocument failed:', err.message, err)
+      setFormError(`שגיאה ביצירת הטיוטה: ${err.message}`)
     } finally {
       setIsGenerating(false)
     }
@@ -302,8 +302,8 @@ export default function CreateClinicalDocumentScreen() {
         setFormError(null)
       }
     } catch (err) {
-      console.error('kai: transcribe failed', err)
-      setRecordError('התמלול נכשל. נסי שוב או הקלידי ידנית.')
+      console.error('kai: transcribe failed:', err.message, err)
+      setRecordError(`התמלול נכשל: ${err.message}. הקלידי ידנית בשדה "${meta.notesLabel}" ולחצי לייצור הטיוטה.`)
     } finally {
       setIsTranscribing(false)
     }

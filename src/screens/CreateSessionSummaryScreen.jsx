@@ -131,9 +131,9 @@ export default function CreateSessionSummaryScreen() {
       setDraftSummary(summary)
       setStep('draft')
     } catch (err) {
-      console.error('kai: generation failed', err)
+      console.error('kai: generation failed:', err.message, err)
       setFormErrors({
-        sourceText: 'שגיאה ביצירת הטיוטה. נסי שוב או פני לצוות התמיכה.',
+        sourceText: `שגיאה ביצירת הטיוטה: ${err.message}`,
       })
     } finally {
       setIsGenerating(false)
@@ -209,8 +209,8 @@ export default function CreateSessionSummaryScreen() {
         setRecordError('⚠ זהו תמלול לדוגמה (mock), לא תמלול אמיתי — בדקי את הגדרות ה-Backend.')
       }
     } catch (err) {
-      console.error('kai: transcription failed', err)
-      setRecordError('התמלול נכשל. נסי שוב, או הקלידי את הטקסט ידנית.')
+      console.error('kai: transcription failed:', err.message, err)
+      setRecordError(`התמלול נכשל: ${err.message}. הקלידי בתיבת הטקסט ולחצי "צור טיוטה".`)
     } finally {
       setIsTranscribing(false)
     }

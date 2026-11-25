@@ -193,8 +193,8 @@ export default function DocumentEditScreen() {
             setSectionIssues(null)
           }
         } catch (err) {
-          console.error('kai: section transcription failed', err)
-          setRecordError('התמלול נכשל. נסי שוב או הקלידי ידנית.')
+          console.error('kai: section transcription failed:', err.message, err)
+          setRecordError(`התמלול נכשל: ${err.message}. הקלידי ידנית בתיבה.`)
         } finally {
           setIsTranscribing(false)
         }
