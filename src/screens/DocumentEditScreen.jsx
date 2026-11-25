@@ -34,6 +34,7 @@ import StatusBadge from '../components/common/StatusBadge'
 import { findIdentifyingInfo } from '../utils/privacyGuard'
 import { diffAuthorship } from '../utils/textDiff'
 import { formatDate } from '../utils/formatDate'
+import { downloadDocumentAsWord, printDocumentAsPdf } from '../utils/exportDocument'
 
 // מסך עריכה + אישור סופי למסמך — שלב 6.
 //
@@ -346,16 +347,29 @@ export default function DocumentEditScreen() {
     }
   }
 
-  async function handleDownload() {
+  async function handleDownloadWord() {
     if (!locked) return
-    const blob = new Blob([exportText()], { type: 'text/plain;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const a = window.document.createElement('a')
-    a.href = url
-    a.download = `kai-${patient?.displayCode ?? 'doc'}-v${currentDocument.version}.txt`
-    a.click()
-    URL.revokeObjectURL(url)
+    downloadDocumentAsWord({
+      doc: currentDocument,
+      patient,
+      clinicianName: clinician?.fullName || clinician?.name || '',
+    })
     await logDocumentExport(currentDocument.id, clinician.id)
+    setNotice('קובץ Word הורד בהצלחה')
+  }
+
+  async function handlePrintPdf() {
+    if (!locked) return
+    try {
+      printDocumentAsPdf({
+        doc: currentDocument,
+        patient,
+        clinicianName: clinician?.fullName || clinician?.name || '',
+      })
+      await logDocumentExport(currentDocument.id, clinician.id)
+    } catch (err) {
+      setNotice(err?.message || 'לא ניתן לפתוח תצוגת PDF')
+    }
   }
 
   // חסימת Ctrl+C / גזירה מהמסמך לפני אישור
@@ -522,7 +536,7 @@ export default function DocumentEditScreen() {
         </div>
       )}
 
-      <ExportBar locked={locked} onCopy={handleCopy} onDownload={handleDownload} />
+      <ExportBar locked={locked} onCopy={handleCopy} onDownloadWord={handleDownloadWord} onPrintPdf={handlePrintPdf} />
 
       {pastVersions.length > 0 && (
         <section aria-label="היסטוריית גרסאות" className="space-y-2">
@@ -887,15 +901,17 @@ function AuthoredText({ aiText, text }) {
   )
 }
 
-function ExportBar({ locked, onCopy, onDownload }) {
+function ExportBar({ locked, onCopy, onDownloadWord, onPrintPdf }) {
   const btn =
     'flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed'
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3">
       <p className="text-xs text-slate-500">
-        {locked ? 'המסמך מאושר — אפשר להעתיק ולהוריד.' : 'העתקה והורדה יתאפשרו אחרי אישור.'}
+        {locked
+          ? 'המסמך מאושר — אפשר להעתיק, להוריד ל-Word (עם שדות מילוי למעלה) או לשמור כ-PDF.'
+          : 'העתקה וייצוא ל-Word/PDF יתאפשרו אחרי אישור המסמך.'}
       </p>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <button
           type="button"
           onClick={onCopy}
@@ -908,13 +924,23 @@ function ExportBar({ locked, onCopy, onDownload }) {
         </button>
         <button
           type="button"
-          onClick={onDownload}
+          onClick={onDownloadWord}
+          disabled={!locked}
+          title={locked ? '' : 'זמין אחרי אישור'}
+          className={`${btn} border-brand-200 bg-brand-50 text-brand-700 hover:bg-brand-100 disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-300`}
+        >
+          <Download className="h-4 w-4" aria-hidden="true" />
+          הורדה ל-Word
+        </button>
+        <button
+          type="button"
+          onClick={onPrintPdf}
           disabled={!locked}
           title={locked ? '' : 'זמין אחרי אישור'}
           className={`${btn} border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:bg-slate-50 disabled:text-slate-300`}
         >
           <Download className="h-4 w-4" aria-hidden="true" />
-          הורדה
+          שמירה כ-PDF
         </button>
       </div>
     </div>
