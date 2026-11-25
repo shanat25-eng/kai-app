@@ -16,7 +16,7 @@ function buildPrintableHtml({ doc, patient, clinicianName }) {
     .map(
       (s) => `
       <section class="section">
-        <h2>${escapeHtml(s.label)}</h2>
+        <h2>${escapeHtml(s.label)}:</h2>
         <div class="body">${escapeHtml(s.text || '').replace(/\n/g, '<br/>')}</div>
       </section>`,
     )
@@ -45,11 +45,12 @@ function buildPrintableHtml({ doc, patient, clinicianName }) {
     margin: 0 auto;
     padding: 16px 8px;
   }
-  .bsd {
-    text-align: right;
-    font-size: 10pt;
-    color: #64748b;
-    margin-bottom: 6px;
+  .top-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10.5pt;
+    color: #475569;
+    margin-bottom: 8px;
   }
   .header {
     border-bottom: 2px solid #4f46e5;
@@ -57,69 +58,87 @@ function buildPrintableHtml({ doc, patient, clinicianName }) {
     margin-bottom: 18px;
   }
   .header h1 {
-    margin: 0 0 8px 0;
-    font-size: 18pt;
+    margin: 0 0 10px 0;
+    font-size: 17pt;
     color: #1e1b4b;
+    text-align: center;
   }
   .meta {
     width: 100%;
     border-collapse: collapse;
     font-size: 10.5pt;
-    color: #475569;
+    color: #334155;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
   }
   .meta td {
-    padding: 3px 0 3px 16px;
+    padding: 5px 10px;
+    border: 1px solid #e2e8f0;
+    width: 50%;
   }
   .meta strong {
     color: #0f172a;
   }
   .section {
-    margin-bottom: 16px;
+    margin-bottom: 15px;
     page-break-inside: avoid;
   }
   .section h2 {
-    margin: 0 0 6px 0;
+    margin: 0 0 5px 0;
     font-size: 12.5pt;
-    color: #3730a3;
-    border-bottom: 1px solid #e2e8f0;
-    padding-bottom: 3px;
+    color: #1e1b4b;
+    text-decoration: underline;
   }
   .section .body {
     font-size: 11.5pt;
     color: #1e293b;
-    white-space: normal;
   }
-  .footer {
+  .signature {
     margin-top: 28px;
-    padding-top: 10px;
+    page-break-inside: avoid;
+    font-size: 11.5pt;
+    line-height: 1.7;
+  }
+  .footer-note {
+    margin-top: 20px;
+    padding-top: 8px;
     border-top: 1px solid #cbd5e1;
-    font-size: 9.5pt;
+    font-size: 9pt;
     color: #64748b;
-    display: flex;
-    justify-content: space-between;
   }
 </style>
 </head>
 <body>
   <div class="page">
-    <div class="bsd">בס"ד</div>
+    <div class="top-row">
+      <span>בס"ד</span>
+      <span>תאריך: ${escapeHtml(approvedDate)}</span>
+    </div>
     <div class="header">
       <h1>${escapeHtml(title)}</h1>
       <table class="meta">
         <tr>
-          <td><strong>קוד מטופל/ת:</strong> ${escapeHtml(patient?.displayCode ?? '—')}</td>
-          <td><strong>קבוצת גיל:</strong> ${escapeHtml(patient?.ageRange ?? '—')}</td>
+          <td><strong>שם המטופל/ת:</strong> _______________________</td>
+          <td><strong>ת.ז.:</strong> ___________________</td>
         </tr>
         <tr>
+          <td><strong>תאריך לידה / גיל:</strong> _______________</td>
+          <td><strong>מסגרת חינוכית:</strong> _______________</td>
+        </tr>
+        <tr>
+          <td><strong>קבוצת גיל:</strong> ${escapeHtml(patient?.ageRange ?? '—')}</td>
           <td><strong>תחום טיפול:</strong> ${escapeHtml(patient?.treatmentArea ?? '—')}</td>
-          <td><strong>תאריך אישור:</strong> ${escapeHtml(approvedDate)} · גרסה ${escapeHtml(doc.version)}</td>
         </tr>
       </table>
     </div>
     ${sectionsHtml}
-    <div class="footer">
-      <span>${clinicianName ? `קלינאית: ${escapeHtml(clinicianName)}` : 'תיעוד קליני — K.ai'}</span>
-      <span>אושר על ידי הקלינאית · ${escapeHtml(approvedDate)}</span>
+    <div class="signature">
+      <div>בברכה,</div>
+      <div><strong>${clinicianName ? escapeHtml(clinicianName) : '_______________________'}</strong></div>
+      <div>קלינאית תקשורת | מ.ר. ____________</div>
+    </div>
+    <div class="footer-note">
+      קוד מערכת: ${escapeHtml(patient?.displayCode ?? '—')} · גרסה ${escapeHtml(doc.version)} · אושר ב-${escapeHtml(approvedDate)}
     </div>
   </div>
 </body>
