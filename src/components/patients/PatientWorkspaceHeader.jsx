@@ -446,68 +446,105 @@ function LocalNameField({ displayCode, patient, clinician }) {
   function buildExportHtml(forWord) {
     const now = new Date()
     const dateStr = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`
-    const wordNs = forWord
-      ? `xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'`
-      : ''
 
-    const fields = [
-      ['שם מטופל/ת', details.name],
-      ['ת.ז', details.idNumber],
-      ['תאריך לידה', details.birthDate],
-      ['קופת חולים', details.healthFund],
-      ['כתובת', details.address],
-      ['שמות הורים', details.parentNames],
-      ['גורם שהמליץ', details.referralSource],
-      ['קבוצת גיל', patient?.ageRange],
-      ['תחום טיפול', patient?.treatmentArea],
-      ['סוג מסגרת', details.frameworkType],
-      ['בדיקת שמיעה — תאריך', details.hearingTestDate],
-      ['בדיקת שמיעה — תוצאה', details.hearingTestResult],
-      ['אבחונים נוספים', details.additionalDiagnoses],
-      ['המלצות למסגרת', details.frameworkRecommendations],
-    ]
-
-    const rows = fields
-      .filter(([, v]) => v)
-      .map(([label, value]) => `<tr><td class="lbl">${label}</td><td>${value.replace(/\n/g, '<br>')}</td></tr>`)
-      .join('')
+    function esc(str) {
+      return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+    }
 
     const clinicianName = clinician?.full_name || ''
     const licenseNumber = clinician?.license_number || ''
+    const name = details.name || ''
+
+    const htmlTag = forWord
+      ? `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40" dir="rtl" lang="he">`
+      : `<html lang="he" dir="rtl">`
+
+    const additionalSection = details.additionalDiagnoses
+      ? `<div class="section"><h2>אבחונים נוספים:</h2><div class="body">${esc(details.additionalDiagnoses).replace(/\n/g, '<br/>')}</div></div>`
+      : ''
+    const recommendationsSection = details.frameworkRecommendations
+      ? `<div class="section"><h2>המלצות למסגרת:</h2><div class="body">${esc(details.frameworkRecommendations).replace(/\n/g, '<br/>')}</div></div>`
+      : ''
 
     return `<!DOCTYPE html>
-<html ${wordNs}>
+${htmlTag}
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8" />
+<title>פרטי מטופל — ${esc(displayCode)}</title>
 <style>
-  body { direction: rtl; font-family: Arial, sans-serif; font-size: 12pt; color: #111; }
-  h1 { font-size: 16pt; border-bottom: 2px solid #333; padding-bottom: 6pt; margin-bottom: 12pt; }
-  table { width: 100%; border-collapse: collapse; margin-bottom: 16pt; }
-  td { padding: 5pt 8pt; vertical-align: top; border: 1px solid #ccc; }
-  td.lbl { font-weight: bold; width: 30%; background: #f5f5f5; white-space: nowrap; }
-  .sig-table td { border: none; }
-  .sig-line { border-bottom: 1px solid #333; min-width: 120pt; display: inline-block; }
-  .footer { margin-top: 24pt; border-top: 1px solid #ccc; padding-top: 6pt; font-size: 9pt; color: #888; text-align: center; }
+  @page { size: A4; margin: 18mm 18mm 20mm 18mm; }
+  body { font-family: 'David', 'Arial', 'Segoe UI', Tahoma, sans-serif; direction: rtl; text-align: right; color: #1e293b; line-height: 1.65; font-size: 12pt; margin: 0; padding: 0; background: #ffffff; }
+  .page { max-width: 720px; margin: 0 auto; padding: 16px 8px; }
+  .top-row { display: flex; justify-content: space-between; font-size: 10.5pt; color: #475569; margin-bottom: 8px; }
+  .header { border-bottom: 2px solid #4f46e5; padding-bottom: 12px; margin-bottom: 18px; }
+  .header h1 { margin: 0 0 10px 0; font-size: 17pt; color: #1e1b4b; text-align: center; }
+  .meta { width: 100%; border-collapse: collapse; font-size: 10.5pt; color: #334155; background: #f8fafc; border: 1px solid #e2e8f0; }
+  .meta td { padding: 5px 10px; border: 1px solid #e2e8f0; width: 50%; }
+  .meta strong { color: #0f172a; }
+  .section { margin-bottom: 15px; page-break-inside: avoid; }
+  .section h2 { margin: 0 0 5px 0; font-size: 12.5pt; color: #1e1b4b; text-decoration: underline; }
+  .section .body { font-size: 11.5pt; color: #1e293b; }
+  .signature { margin-top: 28px; page-break-inside: avoid; font-size: 11.5pt; line-height: 1.7; }
+  .footer-note { margin-top: 20px; padding-top: 8px; border-top: 1px solid #cbd5e1; font-size: 9pt; color: #64748b; }
 </style>
 </head>
-<body dir="rtl">
-<h1>פרטי מטופל — ${displayCode}</h1>
-<table>${rows}</table>
-<table class="sig-table">
-  <tr>
-    <td style="width:50%">
-      <div>שם הבודקת: ${clinicianName}</div>
-      <div>קלינאית תקשורת</div>
-      ${licenseNumber ? `<div>מ.ר. ${licenseNumber}</div>` : ''}
-    </td>
-    <td style="width:50%">
-      <div>תאריך: ${dateStr}</div>
-      <div>&nbsp;</div>
-      <div>חתימה וחותמת: <span class="sig-line">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></div>
-    </td>
-  </tr>
-</table>
-<div class="footer">הופק באמצעות K.ai &nbsp;|&nbsp; &copy; 2026 K.ai &nbsp;|&nbsp; פיילוט — לשימוש בדיקה בלבד</div>
+<body>
+  <div class="page">
+    <div class="top-row">
+      <span>בס"ד</span>
+      <span>תאריך: ${esc(dateStr)}</span>
+    </div>
+    <div class="header">
+      <h1>פרטי מטופל — ${esc(displayCode)}</h1>
+      <table class="meta">
+        <tr>
+          <td><strong>שם המטופל/ת:</strong> ${name ? esc(name) : '_______________________'}</td>
+          <td><strong>ת.ז.:</strong> ${details.idNumber ? esc(details.idNumber) : '___________________'}</td>
+        </tr>
+        <tr>
+          <td><strong>תאריך לידה:</strong> ${details.birthDate ? esc(details.birthDate) : '_______________'}</td>
+          <td><strong>קופת חולים:</strong> ${details.healthFund ? esc(details.healthFund) : '_______________'}</td>
+        </tr>
+        <tr>
+          <td><strong>קבוצת גיל:</strong> ${esc(patient?.ageRange ?? '—')}</td>
+          <td><strong>תחום טיפול:</strong> ${esc(patient?.treatmentArea ?? '—')}</td>
+        </tr>
+        ${details.parentNames ? `<tr><td colspan="2"><strong>שמות הורים:</strong> ${esc(details.parentNames)}</td></tr>` : ''}
+        ${details.referralSource ? `<tr><td colspan="2"><strong>גורם שהמליץ:</strong> ${esc(details.referralSource)}</td></tr>` : ''}
+        ${details.address ? `<tr><td colspan="2"><strong>כתובת:</strong> ${esc(details.address)}</td></tr>` : ''}
+        <tr>
+          <td><strong>סוג מסגרת:</strong> ${details.frameworkType ? esc(details.frameworkType) : '_______________'}</td>
+          <td><strong>בדיקת שמיעה:</strong> ${details.hearingTestDate || details.hearingTestResult
+            ? `${esc(details.hearingTestDate ?? '')} ${esc(details.hearingTestResult ?? '')}`.trim()
+            : '_______________'}</td>
+        </tr>
+      </table>
+    </div>
+    ${additionalSection}
+    ${recommendationsSection}
+    <div class="signature">
+      <div>בברכה,</div>
+      <table style="width:100%;margin-top:14px;border-collapse:collapse;">
+        <tr>
+          <td style="width:50%;padding:4px 8px 4px 0;vertical-align:top;">
+            <div style="font-size:10.5pt;color:#475569;margin-bottom:2px;">שם הבודקת:</div>
+            <div style="font-weight:bold;">${clinicianName ? esc(clinicianName) : '_______________________'}</div>
+            <div style="font-size:10pt;color:#475569;">קלינאית תקשורת</div>
+            <div style="font-size:10pt;color:#475569;">מ.ר. ${licenseNumber ? esc(licenseNumber) : '____________'}</div>
+          </td>
+          <td style="width:50%;padding:4px 0 4px 8px;vertical-align:top;border-right:1px solid #e2e8f0;">
+            <div style="font-size:10.5pt;color:#475569;margin-bottom:2px;">תאריך:</div>
+            <div>${esc(dateStr)}</div>
+            <div style="margin-top:28px;border-bottom:1px solid #334155;width:140px;">&nbsp;</div>
+            <div style="font-size:9pt;color:#64748b;margin-top:3px;">חתימה וחותמת</div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="footer-note" style="text-align:center;">
+      הופק באמצעות K.ai &nbsp;|&nbsp; &copy; 2026 K.ai &nbsp;|&nbsp; פיילוט — לשימוש בדיקה בלבד
+    </div>
+  </div>
 </body>
 </html>`
   }
