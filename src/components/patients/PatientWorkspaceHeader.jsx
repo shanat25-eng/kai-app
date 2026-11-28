@@ -478,9 +478,9 @@ ${htmlTag}
   .top-row { display: flex; justify-content: space-between; font-size: 10.5pt; color: #475569; margin-bottom: 8px; }
   .header { border-bottom: 2px solid #4f46e5; padding-bottom: 12px; margin-bottom: 18px; }
   .header h1 { margin: 0 0 10px 0; font-size: 17pt; color: #1e1b4b; text-align: center; }
-  .meta { width: 100%; border-collapse: collapse; font-size: 10.5pt; color: #334155; background: #f8fafc; border: 1px solid #e2e8f0; }
-  .meta td { padding: 5px 10px; border: 1px solid #e2e8f0; width: 50%; }
-  .meta strong { color: #0f172a; }
+    .fields { margin: 0 0 18px 0; }
+  .field { margin: 0 0 4px 0; font-size: 11.5pt; color: #1e293b; border: none; }
+  .field strong { color: #0f172a; }
   .section { margin-bottom: 15px; page-break-inside: avoid; }
   .section h2 { margin: 0 0 5px 0; font-size: 12.5pt; color: #1e1b4b; text-decoration: underline; }
   .section .body { font-size: 11.5pt; color: #1e293b; }
@@ -495,30 +495,22 @@ ${htmlTag}
       <span>תאריך: ${esc(dateStr)}</span>
     </div>
     <div class="header">
-      <h1>פרטי מטופל — ${esc(displayCode)}</h1>
-      <table class="meta">
-        <tr>
-          <td><strong>שם המטופל/ת:</strong> ${name ? esc(name) : '_______________________'}</td>
-          <td><strong>ת.ז.:</strong> ${details.idNumber ? esc(details.idNumber) : '___________________'}</td>
-        </tr>
-        <tr>
-          <td><strong>תאריך לידה:</strong> ${details.birthDate ? esc(details.birthDate) : '_______________'}</td>
-          <td><strong>קופת חולים:</strong> ${details.healthFund ? esc(details.healthFund) : '_______________'}</td>
-        </tr>
-        <tr>
-          <td><strong>קבוצת גיל:</strong> ${esc(patient?.ageRange ?? '—')}</td>
-          <td><strong>תחום טיפול:</strong> ${esc(patient?.treatmentArea ?? '—')}</td>
-        </tr>
-        ${details.parentNames ? `<tr><td colspan="2"><strong>שמות הורים:</strong> ${esc(details.parentNames)}</td></tr>` : ''}
-        ${details.referralSource ? `<tr><td colspan="2"><strong>גורם שהמליץ:</strong> ${esc(details.referralSource)}</td></tr>` : ''}
-        ${details.address ? `<tr><td colspan="2"><strong>כתובת:</strong> ${esc(details.address)}</td></tr>` : ''}
-        <tr>
-          <td><strong>סוג מסגרת:</strong> ${details.frameworkType ? esc(details.frameworkType) : '_______________'}</td>
-          <td><strong>בדיקת שמיעה:</strong> ${details.hearingTestDate || details.hearingTestResult
-            ? `${esc(details.hearingTestDate ?? '')} ${esc(details.hearingTestResult ?? '')}`.trim()
-            : '_______________'}</td>
-        </tr>
-      </table>
+          <h1 style="margin-bottom:0;">פרטי מטופל — ${esc(displayCode)}</h1>
+    </div>
+    <div class="fields">
+      <p class="field"><strong>שם המטופל/ת:</strong> ${name ? esc(name) : '_______________________'}</p>
+      <p class="field"><strong>ת.ז.:</strong> ${details.idNumber ? esc(details.idNumber) : '___________________'}</p>
+      <p class="field"><strong>תאריך לידה:</strong> ${details.birthDate ? esc(details.birthDate) : '_______________'}</p>
+      <p class="field"><strong>קופת חולים:</strong> ${details.healthFund ? esc(details.healthFund) : '_______________'}</p>
+      <p class="field"><strong>קבוצת גיל:</strong> ${esc(patient?.ageRange ?? '—')}</p>
+      <p class="field"><strong>תחום טיפול:</strong> ${esc(patient?.treatmentArea ?? '—')}</p>
+      ${details.parentNames ? `<p class="field"><strong>שמות הורים:</strong> ${esc(details.parentNames)}</p>` : ''}
+      ${details.referralSource ? `<p class="field"><strong>גורם שהמליץ:</strong> ${esc(details.referralSource)}</p>` : ''}
+      ${details.address ? `<p class="field"><strong>כתובת:</strong> ${esc(details.address)}</p>` : ''}
+      <p class="field"><strong>סוג מסגרת:</strong> ${details.frameworkType ? esc(details.frameworkType) : '_______________'}</p>
+      <p class="field"><strong>בדיקת שמיעה:</strong> ${details.hearingTestDate || details.hearingTestResult
+        ? `${esc(details.hearingTestDate ?? '')} ${esc(details.hearingTestResult ?? '')}`.trim()
+        : '_______________'}</p>
     </div>
     ${additionalSection}
     ${recommendationsSection}
